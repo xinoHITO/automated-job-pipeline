@@ -15,7 +15,7 @@ from contextlib import asynccontextmanager
 load_dotenv()
 
 API_SECRET_TOKEN = os.environ.get("API_SECRET_TOKEN")
-if API_SECRET_TOKEN is None:
+if API_SECRET_TOKEN is None or len(API_SECRET_TOKEN) == 0:
     API_SECRET_TOKEN = secrets.token_urlsafe(16)
     print(f"[WARN] API_SECRET_TOKEN not set — using a random one for this session: {API_SECRET_TOKEN}")
 
