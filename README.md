@@ -102,6 +102,7 @@ cp .env.example .env
 | `PORTFOLIO_FILE` | Path to your portfolio PDF (default: `data/portfolio.pdf`) |
 | `COVER_LETTER_TEMPLATE` | Cover letter template path (default: `config/coverLetterTemplate.example.txt`) |
 | `MAX_CONCURRENT_TICKETS` | Max pipeline runs processed at the same time (API mode) |
+| `SLEEP_AFTER_RUN` | For cron jobs (through run_daily.sh) set to 1 if you want the host to go to sleep after running the pipeline |
 
 > The PDFs in `data/` are **fictional samples** so the project runs out of the box. Point `CV_FILE`/`PORTFOLIO_FILE` at your own documents.
 
