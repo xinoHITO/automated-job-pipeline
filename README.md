@@ -80,7 +80,7 @@ Requires **Python 3.11+**.
 git clone https://github.com/xinoHITO/automated-job-pipeline.git
 cd job-pipeline
 python -m venv .venv 
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate   # On Windows use this: .venv\Scripts\activate
 pip install -r requirements.txt
 playwright install chromium
 ```
