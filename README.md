@@ -80,7 +80,7 @@ Requires **Python 3.11+**.
 git clone https://github.com/xinoHITO/automated-job-pipeline.git
 cd automated-job-pipeline
 python -m venv .venv 
-source .venv/bin/activate   # On Windows use this: .venv\Scripts\activate
+source .venv/bin/activate   # On Windows: .\.venv\Scripts\activate.bat
 pip install -r requirements.txt
 playwright install chromium
 ```
@@ -88,7 +88,7 @@ playwright install chromium
 ### Environment variables
 
 ```bash
-cp .env.example .env  #On Windows use: ren .env.example .env
+cp .env.example .env  #On Windows: ren .env.example .env
 ```
 
 | Variable | Purpose |
