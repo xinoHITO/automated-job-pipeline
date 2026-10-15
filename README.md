@@ -306,7 +306,7 @@ Each site is one entry in the scraping rules file. No Python required:
 ## Running tests
 
 ```bash
-pytest test/ -v
+python -m pytest test/ -v
 ```
 
 Tests cover date parsing, age filtering, dedup logic, and hiring rules. Tests that hit live websites or external APIs (Notion, Gemini) require network access and valid credentials in `.env`.
