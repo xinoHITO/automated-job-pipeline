@@ -2,7 +2,9 @@ import os
 import asyncio
 import json
 # api.py — Job Pipeline as a service
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Request
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Security
+from fastapi.security import APIKeyHeader
+import secrets
 from pydantic import BaseModel
 from job_bot import JobBot
 from job_bot import profiler
@@ -11,6 +13,11 @@ import sqlite3
 import uuid
 from contextlib import asynccontextmanager
 load_dotenv()
+
+API_SECRET_TOKEN = os.environ.get("API_SECRET_TOKEN")
+if API_SECRET_TOKEN is None:
+    API_SECRET_TOKEN = secrets.token_urlsafe(16)
+    print(f"[WARN] API_SECRET_TOKEN not set — using a random one for this session: {API_SECRET_TOKEN}")
 
 MAX_CONCURRENT_TICKETS = None
 try:
@@ -130,7 +137,6 @@ class RunRequest(BaseModel):
     max_days: int = 15
     write_cover_letters: bool = False
     profile:bool = False
-    secret_token: str = None
     send_notification: bool = False
 
 async def _run_pipeline(req: RunRequest, ticket_id:str):
@@ -153,17 +159,22 @@ async def _run_pipeline(req: RunRequest, ticket_id:str):
         except Exception as e:
             update_ticket_status(ticket_id,"failed",result=str(e))
 
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
 # ── Endpoints ──
 @app.post("/run", status_code=202)
-def run(run_config: RunRequest, background: BackgroundTasks, request:Request):
-    API_SECRET_TOKEN = os.environ.get("API_SECRET_TOKEN")
+def run(run_config: RunRequest,
+         background: BackgroundTasks, 
+         request:Request,
+         x_api_key: str = Security(api_key_header)):
+    #API_SECRET_TOKEN = os.environ.get("API_SECRET_TOKEN")
     if API_SECRET_TOKEN is None:
         raise HTTPException(
             status_code=403,
-            detail="Unauthorized access attempt."
+            detail="API_SECRET_TOKEN not configured on server."
         )
     # Security check: Ensure the request contains the correct secret token header
-    if run_config.secret_token is None or run_config.secret_token != API_SECRET_TOKEN:
+    if x_api_key is None or x_api_key != API_SECRET_TOKEN:
         raise HTTPException(
             status_code=403,
             detail="Unauthorized access attempt."
