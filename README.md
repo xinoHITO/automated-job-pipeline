@@ -1,9 +1,9 @@
 # Job Pipeline
 
 **Config-driven job discovery and AI-assisted application pipeline.**
-Scrape hundreds of job postings across multiple platforms, filter them with a rule-based scoring engine, and generate tailored cover letters with LLMs — all from declarative JSON configuration.
+Scrape job postings across multiple platforms, filter them with a rule-based scoring engine, and generate tailored cover letters with LLMs — all from declarative JSON configuration.
 
-[![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](#docker)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](#api)
 [![Tests](https://img.shields.io/badge/tests-pytest-yellow.svg)](#running-tests)
@@ -29,11 +29,12 @@ The whole system is driven by **declarative JSON configuration** — adding a ne
 - **Multi-engine scraping**: static sites via `requests` + `BeautifulSoup`, JavaScript-rendered SPAs via async **Playwright** with automated interactions (button clicks, modals, pagination).
 - **Deep crawling**: visits each posting's detail page to extract the full description and posting date.
 - **Smart filtering**: posting-age cutoff, plus **two-layer deduplication** — in-memory hash set during the run + Notion API check for historical data — before spending resources on deep crawls.
-- **Rule-based scoring engine**: a configurable scoring matrix (`config/rules.json`) — weighted criteria, keyword gates, instant-reject lists — evaluated by an LLM for semantic matching.
+- **Rule-based scoring engine**: a configurable scoring matrix (`config/ai_filter_rules.example.json`) — weighted criteria, keyword gates, instant-reject lists — evaluated with an LLM for semantic matching.
 - **Resilient LLM integration**: exponential-backoff retries, selective retry on HTTP 429/5xx, and automatic fallback to a backup model.
 - **AI cover letters**: generated with Google Gemini, grounded in the candidate's resume/portfolio PDFs and a personal template.
 - **Memory profiling**: tracks Python + Chromium footprint during scraping runs (psutil).
-- **CLI + API**: run as a terminal tool (`python -m job_bot run`) or as a REST API (FastAPI) with async job triggering and score-filtered queries.
+- **CLI + API**: run as a terminal tool (`python -m job_bot run`) or as a REST API (FastAPI) with async job ticketing and score-filtered queries.
+- **Cron-friendly**: `run_daily.sh` builds the Docker image and runs the pipeline on a schedule, on Linux and macOS.
 
 ---
 
@@ -41,7 +42,7 @@ The whole system is driven by **declarative JSON configuration** — adding a ne
 
 ```mermaid
 flowchart LR
-    A["Config<br/>(sites + profiles)"] --> B["Scraping Engine"]
+    A["Config<br/>(sites + rules)"] --> B["Scraping Engine"]
     B --> C{"Site type?"}
     C -->|"Static HTML"| D["requests + BeautifulSoup"]
     C -->|"JS-rendered SPA"| E["async Playwright"]
@@ -50,12 +51,12 @@ flowchart LR
     F --> G["Age filter<br/>(dateparser)"]
     G --> H["Dedup: in-memory<br/>+ Notion API"]
     H --> I["Deep-crawl<br/>detail pages"]
-    I --> J["Job scoring<br/>(Checks for keywords in config file)"]
+    I --> J["Job scoring<br/>(rules matrix + LLM)"]
     J --> K{"Score >=<br/>threshold?"}
-    K -->|"Yes"| O["Skip cover letter?"]
-    O -->|"No"| P["(Optional)<br/>Generate <br/>cover letter<br/>w/Gemini<br/>"]
-    P --> Q["Notion database"]
-    O -->|"Yes"| Q["Save into<br/>Notion database"]
+    K -->|"Yes"| O{"Write cover<br/>letter?"}
+    O -->|"No"| Q["Save into<br/>Notion database"]
+    O -->|"Yes"| P["Generate cover letter<br/>w/ Gemini"]
+    P --> Q
     K -->|"No"| Z["Skip"]
 ```
 
@@ -73,7 +74,7 @@ flowchart LR
 
 ## Quickstart
 
-Requires **Python 3.14+**.
+Requires **Python 3.11+**.
 
 ```bash
 git clone https://github.com/<you>/job-pipeline.git
@@ -95,12 +96,19 @@ cp .env.example .env
 | `DATABASE_ID` | Target Notion database ID |
 | `DATA_SOURCE_ID` | Notion data source ID |
 | `GEMINI_API_KEY` | Google Gemini API key (scoring + cover letters) |
+| `API_SECRET_TOKEN` | Shared secret required by `POST /run` (API mode only) |
 | `DISCORD_WEBHOOK_URL` | Optional: notifications on run completion |
+| `CV_FILE` | Path to your resume PDF (default: `data/resume.pdf`) |
+| `PORTFOLIO_FILE` | Path to your portfolio PDF (default: `data/portfolio.pdf`) |
+| `COVER_LETTER_TEMPLATE` | Cover letter template path (default: `config/coverLetterTemplate.example.txt`) |
+| `MAX_CONCURRENT_TICKETS` | Max pipeline runs processed at the same time (API mode) |
+
+> The PDFs in `data/` are **fictional samples** so the project runs out of the box. Point `CV_FILE`/`PORTFOLIO_FILE` at your own documents.
 
 ### Run the pipeline
 
 ```bash
-# CLI — full run with default profile
+# CLI — full run with default config
 python -m job_bot run
 
 # CLI — with options
@@ -111,13 +119,47 @@ python -m job_bot serve
 # or: uvicorn api:app --reload
 ```
 
-API endpoints (see interactive docs at `http://127.0.0.1:8000/docs`):
+---
+
+## API
+
+Interactive docs available at `http://127.0.0.1:8080/docs` (Swagger UI).
+
+Jobs are handled as **tickets**: `POST /run` enqueues work and returns immediately (202); you poll `/status` with the ticket id, then read results from `/jobs`.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/run` | Trigger pipeline (async, returns 202) |
-| `GET` | `/status` | Pipeline status (running, last result) |
-| `GET` | `/jobs?min_score=70` | Last results, filtered by score |
+| `POST` | `/run` | Enqueue a pipeline run (async, returns 202 + ticket id) |
+| `GET` | `/status?ticket_id=<id>` | Ticket status: `in queue` / `running` / `done` / `failed` |
+| `GET` | `/jobs?ticket_id=<id>&min_score=70` | Jobs from a finished ticket, filtered by score |
+
+`POST /run` body:
+
+| Field | Default | Purpose |
+|---|---|---|
+| `secret_token` | — | Must match `API_SECRET_TOKEN` |
+| `max_days` | `15` | Ignore postings older than N days |
+| `write_cover_letters` | `false` | Generate cover letters for jobs that pass screening |
+| `profile` | `false` | Run with memory profiling (psutil) |
+| `send_notification` | `false` | Send Discord notification when finished |
+
+Example:
+
+```bash
+# 1. Enqueue a run
+curl -X POST http://127.0.0.1:8080/run \
+  -H "Content-Type: application/json" \
+  -d '{"secret_token": "YOUR_TOKEN", "max_days": 10, "write_cover_letters": true}'
+# → {"id": "<ticket_id>", "status": "in queue", "poll_url": "..."}
+
+# 2. Poll until done
+curl "http://127.0.0.1:8080/status?ticket_id=<ticket_id>"
+
+# 3. Get filtered results
+curl "http://127.0.0.1:8080/jobs?ticket_id=<ticket_id>&min_score=70"
+```
+
+Ticket state persists in a local SQLite database (`tickets.db`), so queued runs survive an API restart.
 
 ---
 
@@ -127,22 +169,48 @@ API endpoints (see interactive docs at `http://127.0.0.1:8000/docs`):
 # Build
 docker build -t job-pipeline .
 
-# Run (with env vars)
+# Run CLI mode (default CMD)
 docker run --rm --env-file .env job-pipeline
 
 # Run API mode
-docker run --rm --env-file .env -p 8000:8000 job-pipeline python -m job_bot serve
+docker run --rm --env-file .env -p 8080:8080 job-pipeline python -m job_bot serve
 ```
 
 The Dockerfile uses the official Playwright base image (`mcr.microsoft.com/playwright/python`) with a non-root user for security.
 
 ---
 
+## Scheduled runs (cron)
+
+`run_daily.sh` starts Docker if needed, pulls the latest code, rebuilds the image, and runs the pipeline — designed to be called from cron on a Linux or macOS machine:
+
+```bash
+crontab -e
+# Run every day at 9:00
+0 9 * * * /path/to/job-pipeline/run_daily.sh >> /path/to/job-pipeline/scraper_logs/cron.log 2>&1
+```
+
+Notes:
+
+- Requires a `.env` file in the repo root.
+- On Linux, starting the Docker daemon may need passwordless sudo (cron has no TTY). If Docker is already running, that step is skipped.
+- Set `SLEEP_AFTER_RUN=1` to put the machine to sleep after the run (e.g. waking a Mac just for the scrape).
+
+---
+
 ## Configuration
+
+Default config paths point at the shipped `*.example.json` files so the project runs immediately. For real use, create your own copies and pass them explicitly:
+
+```bash
+python -m job_bot run \
+  --scraping-rules config/my_scraping_rules.json \
+  --hiring-rules config/my_hiring_rules.json
+```
 
 ### Adding a new job board
 
-Each site is one entry in `config/web_scraping_rules.json`:
+Each site is one entry in the scraping rules file. No Python required:
 
 ```json
 {
@@ -178,12 +246,18 @@ Each site is one entry in `config/web_scraping_rules.json`:
 #### Playwright-only extras
 
 ```json
+"use_playwright": true,
+"layer_to_wait_for": ".jobs-loaded",
 "click_each_job": true,
-"clicks_per_job": [
+"clicks_per_job_before_parsing": [
   { "description": "Read more", "target": ".read-more", "optional": true },
   { "description": "Close modal", "position": { "x": 0, "y": 0 } }
 ]
 ```
+
+### Scoring matrix
+
+`config/ai_filter_rules.example.json` defines the evaluation matrix: score threshold, title gate (target / medium / instant-reject keywords), tech stack weights, career band, and domain bonuses. Edit the keywords and points to match your profile.
 
 ---
 
@@ -191,20 +265,31 @@ Each site is one entry in `config/web_scraping_rules.json`:
 
 ```
 ├── config/
-│   ├── web_scraping_rules.json
-│   └── coverLetterTemplate.txt
+│   ├── scraping_rules.example.json   # per-site scraping configs
+│   ├── ai_filter_rules.example.json  # scoring matrix
+│   ├── hiring_rules.example.json     # keyword hiring rules
+│   └── coverLetterTemplate.example.txt
+├── data/
+│   ├── resume.pdf                    # fictional sample — replace with yours
+│   └── portfolio.pdf                 # fictional sample — replace with yours
 ├── job_bot/
 │   ├── __main__.py            # python -m job_bot entrypoint
-│   ├── cli.py                 # typer CLI
+│   ├── cli.py                 # typer CLI (run / serve)
 │   ├── JobBot.py              # pipeline orchestrator
 │   ├── webscraper.py          # scraping engine (BS4 + Playwright)
+│   ├── webscraping_rules.py   # scraping config models
 │   ├── coverletterwriter.py   # LLM scoring + cover letters
+│   ├── hiring_rules.py        # hiring rules loader
 │   ├── notion.py              # Notion integration (dedup + storage)
+│   ├── notification.py        # Discord webhook notifications
 │   ├── profiler.py            # memory profiling (psutil)
-│   └── debug.py               # logging helpers
+│   ├── debug.py               # logging helpers
+│   └── globals.py             # default paths
 ├── test/
-│   └── test_webscraper.py
+│   ├── test_webscraper.py
+│   └── sample_*.json          # sample site configs for tests
 ├── api.py                     # FastAPI app
+├── run_daily.sh               # cron-friendly daily run (Linux/macOS)
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
@@ -214,7 +299,7 @@ Each site is one entry in `config/web_scraping_rules.json`:
 
 ## Tech stack
 
-**Python 3.14** · **Playwright** (async) · **BeautifulSoup / requests** · **FastAPI / uvicorn** · **typer** · **dateparser** · **google-genai** · **tenacity** (retry/backoff) · **notion-client** · **psutil** · **python-dotenv** · **colorama**
+**Python 3.11+** · **Playwright** (async) · **BeautifulSoup / requests** · **FastAPI / uvicorn** · **typer** · **dateparser** · **google-genai** · **tenacity** (retry/backoff) · **notion-client** · **SQLite** · **psutil** · **python-dotenv** · **colorama**
 
 ---
 
@@ -224,7 +309,7 @@ Each site is one entry in `config/web_scraping_rules.json`:
 pytest test/ -v
 ```
 
-Tests cover date parsing, age filtering, and dedup logic. The Notion test requires a valid `NOTION_TOKEN` (skipped otherwise).
+Tests cover date parsing, age filtering, dedup logic, and hiring rules. Tests that hit live websites or external APIs (Notion, Gemini) require network access and valid credentials in `.env`.
 
 ---
 
@@ -232,26 +317,23 @@ Tests cover date parsing, age filtering, and dedup logic. The Notion test requir
 
 GitHub Actions, GitLab CI, and similar services use **datacenter IP ranges** that job boards detect and block with CAPTCHAs. This pipeline is designed to run from **residential IPs** (your machine, a home server, or a VPN with residential exit nodes). For automation, use:
 
-- **Local cron** + Docker (see `run_daily.sh` for an example with Discord notifications)
+- **Local cron** + Docker (`run_daily.sh`)
 - **A VPS with residential IP** (Mullvad, ProtonVPN, or similar)
 
 ---
 
 ## Roadmap
 
-- [x] CLI entrypoint (`run` / `--profile` / `--max-days` / `--write-cover`)
+- [x] CLI entrypoint (`run` / `--max-days` / `--write-cover`)
 - [x] Docker + containerized execution
-- [x] FastAPI service (`POST /run`, `GET /jobs`, `GET /status`)
+- [x] FastAPI service with job ticketing (`POST /run`, `GET /status`, `GET /jobs`)
 - [x] Two-layer dedup (in-memory + Notion API)
 - [x] Memory profiling (psutil)
 - [x] pytest coverage for core parsing logic
-- [ ] Ticketing system to handle FastAPI requests
 - [ ] Multi-profile scoring architecture (switch job-search targets via JSON profiles)
-- [ ] SQLite/PostgreSQL persistence layer (replace in-memory state)
+- [ ] PostgreSQL persistence layer (replace SQLite)
 - [ ] Cloud deployment of API (Railway/Render) with local scraping
-- [ ] Scoring matrix presets (more built-in profiles)
 - [ ] Expanded pytest coverage (Playwright mocks)
-
 
 ---
 
@@ -263,4 +345,4 @@ Built for **personal use**. Scraping targets are configured manually and accesse
 
 ## License
 
-MIT
+[MIT](LICENSE)
