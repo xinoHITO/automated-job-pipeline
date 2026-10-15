@@ -88,7 +88,7 @@ playwright install chromium
 ### Environment variables
 
 ```bash
-cp .env.example .env
+cp .env.example .env  #On Windows use: ren .env.example .env
 ```
 
 | Variable | Purpose |
