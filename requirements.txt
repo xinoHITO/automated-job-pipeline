@@ -1,7 +1,7 @@
 # ─── Core pipeline ────────────────────────────────────────────
 beautifulsoup4>=4.12
 requests>=2.31
-playwright>=1.40
+playwright==1.63.0
 dateparser>=1.2
 
 # ─── AI / LLM ─────────────────────────────────────────────────
