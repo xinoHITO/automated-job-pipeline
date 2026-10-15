@@ -30,8 +30,8 @@ The whole system is driven by **declarative JSON configuration** — adding a ne
 - **Deep crawling**: visits each posting's detail page to extract the full description and posting date.
 - **Smart filtering**: posting-age cutoff, plus **two-layer deduplication** — in-memory hash set during the run + Notion API check for historical data — before spending resources on deep crawls.
 - **Rule-based scoring engine**: a configurable scoring matrix (`config/hiring_rules.example.json`) — weighted criteria, keyword gates, instant-reject lists.
-- **Resilient LLM integration**: exponential-backoff retries, selective retry on HTTP 429/5xx, and automatic fallback to a backup model.
 - **AI cover letters**: generated with Google Gemini, grounded in the candidate's resume/portfolio PDFs and a personal template.
+- **Resilient LLM integration**: exponential-backoff retries, selective retry on HTTP 429/5xx, and automatic fallback to a backup model.
 - **Memory profiling**: tracks Python + Chromium footprint during scraping runs (psutil).
 - **CLI + API**: run as a terminal tool (`python -m job_bot run`) or as a REST API (FastAPI) with async job ticketing and score-filtered queries.
 - **Cron-friendly**: `run_daily.sh` builds the Docker image and runs the pipeline on a schedule, on Linux and macOS.
