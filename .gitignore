@@ -1,0 +1,46 @@
+# ─── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ─── Environment / secrets ────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ─── Personal data — NEVER commit ─────────────────────────────
+config/*
+entries.json
+data/*
+!data/resume.pdf
+!data/portfolio.pdf
+
+# Keep an example for each personal config:
+!config/coverLetterTemplate.example.txt
+!config/ai_filter_rules.example.json
+!config/hiring_rules.example.json
+!config/scraping_rules.example.json
+
+# ─── Runtime artifacts ────────────────────────────────────────
+temp/
+uploads/
+output/
+scraper_logs/
+*.log
+
+# ─── Playwright ───────────────────────────────────────────────
+.playwright/
+
+# ─── Editors / OS ─────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ─── Legacy project files ─────────────────────────────────────
+*.pyproj
+*.slnx
+*.code-workspace
+tickets.db

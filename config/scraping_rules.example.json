@@ -1,0 +1,144 @@
+[
+  {
+    "site_name": "https://hitmarker.net",
+    "starting_url": "https://hitmarker.net/jobs?location=anywhere&remote=only&tag=122713+122733&sort=date",
+    "use_playwright" : true,
+    "jobs_cap": -1,
+    "layer_to_wait_for": "article.job-feed-card",
+    "job_item": "article.job-feed-card",
+    "job_title": "h3",
+    "job_company": ".font-medium.text-alpha-8",
+    "job_location":"span.size-3\\.5 + span.min-w-0.truncate",
+    "job_post_date":"span[data-relative]",
+    "pagination":"button[aria-label=\"Next page\"]"
+  },
+  {
+    "site_name": "https://gamesjobsindex.com/",
+    "starting_url": "https://gamesjobsindex.com/?workplace=remote&category=Engineering&location=AR%2CBR%2CCO%2CPE%2C__null__",
+    "use_playwright" : true,
+    "layer_to_wait_for": ".vgj-cards",
+    "job_group": ".vgj-cards",
+    "jobs_cap": -1,
+    "job_item": ".vgj-card-item",
+    "job_url": ".vgj-modal-apply",
+    "job_title": ".vgj-card-title",
+    "job_company": ".vgj-card-studio",
+    "job_location":".vgj-card-loc",
+    "job_description":".vgj-modal-desc",
+    "job_post_date":".vgj-card-age",
+    "job_post_date_prefix":"On board since ",
+    "pagination":".vgj-page-btn:last-child",
+    "click_each_job": true,
+    "clicks_per_job_before_parsing":[
+        {
+          "description": "\"Read more\" for the full description",
+          "target": ".vgj-modal-readmore",
+          "optional": true          
+        }
+      ],
+    "clicks_per_job_after_parsing": [
+        {
+          "description": "Outside the modal to clean the window",
+          "position": { "x": 0, "y": 0 }
+        }
+      ]
+  },
+  {
+    "site_name": "https://devquest.gg",
+    "starting_url": "https://devquest.gg/?age=30&kinds=dev%3Bcodev%3Bpublisher&work=Remote",
+    "use_playwright" : true,
+    "layer_to_wait_for": ".group",
+    "job_group": "div.group:first-child",
+    "job_item": "div.row    ",
+    "job_url": "a.title",
+    "job_title": ".title",
+    "job_company": ".studio",
+    "job_location":".rtags span.tag.locchip",
+    "job_post_date":".posted",    
+    "clicks": [
+        {
+          "description": "\"🌍 Worldwide\" button",
+          "target": "button:has-text('🌍 Worldwide')",
+          "optional": true
+        },
+        {
+          "description": "Show more",
+          "target": ".more-btn",
+          "optional": true
+        }
+      ]
+  },
+  {
+    "site_name": "https://gamejobs.co",
+    "starting_url": "https://gamejobs.co/search?t=Engineering&w=Remote",
+    "use_playwright" : true,
+    "job_item": ".job",
+    "pagination":".paging > a.btn-hollow:last-child",
+    "jobs_cap": -1,
+    "job_url": ".title",
+    "job_title": ".title",
+    "job_company": ".c",
+    "job_description": ".job-description",
+    "is_date_in_detail": true,
+    "job_post_date":"article.w800 > div:has(a.w) + div",
+    "is_location_in_detail": true,
+    "job_location": "a.w"
+  },
+  {
+    "site_name": "https://ingamejob.com/en/jobs",
+    "starting_url": "https://ingamejob.com/en/jobs",
+    "job_item": ".listing-job-info",
+    "pagination":"page",
+    "jobs_cap": -1,
+    "job_url": "h5 a",
+    "job_title": "h5 a",
+    "job_company": ".m-0",
+    "job_description": ".job-view-container",
+    "is_date_in_detail": true,
+    "job_post_date":"p.m-0",
+    "job_location":".m-0:nth-of-type(2)"
+  },
+  {
+    "site_name": "https://www.workwithindies.com",
+    "starting_url": "https://www.workwithindies.com/categories/programming",
+    "job_item": ".job-card",
+    "jobs_cap": -1,
+    "job_url": "",
+    "job_title": ".text-block-14",
+    "job_company": ".job-card-text-smol",
+    "job_description": ".job-description",
+    "is_date_in_detail": true,
+    "job_post_date":"div.posted:nth-of-type(3)",
+    "job_location":".job-card-text.bold:last-child"
+  },
+  {
+    "site_name": "https://remotegamejobs.com/",
+    "starting_url": "https://remotegamejobs.com/",
+    "job_item": ".card",
+    "jobs_cap": -1,
+    "job_url": "",
+    "job_title": ".title h3",
+    "job_company": ".sub b",
+    "job_description": ".prose.content",
+    "is_date_in_detail": true,
+    "job_post_date":".small.muted",
+    "is_location_in_detail": true,
+    "job_location":".kv-list > div:nth-child(2) > span:last-child",
+    "job_post_date_prefix":"Posted ",
+    "job_post_date_suffix":" · "
+  },
+  {
+    "site_name": "https://www.gamesjobsdirect.com",
+    "starting_url": "https://www.gamesjobsdirect.com/results?mt=2&ic=False&rl=remote&age=4&exp=4&sper=4&i=16&sort=date",
+    "job_item": ".col-sm-9",
+    "pagination":"page",
+    "jobs_cap": -1,
+    "job_url": "a.job-title",
+    "job_title": ".job-title",
+    "job_company": ".job-company",
+    "job_description": ".post-description",
+    "is_date_in_detail": false,
+    "job_post_date":".job-posteddate",
+    "job_location":".job-location"
+  }
+]

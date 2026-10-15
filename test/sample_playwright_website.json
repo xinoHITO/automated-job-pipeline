@@ -1,0 +1,31 @@
+{
+    "site_name": "https://gamesjobsindex.com/",
+    "starting_url": "https://gamesjobsindex.com/?workplace=remote&category=Engineering&location=AR%2CBR%2CCO%2CPE%2C__null__",
+    "use_playwright" : true,
+    "layer_to_wait_for": ".vgj-cards",
+    "job_group": ".vgj-cards",
+    "jobs_cap": -1,
+    "job_item": ".vgj-card-item",
+    "job_url": ".vgj-modal-apply",
+    "job_title": ".vgj-card-title",
+    "job_company": ".vgj-card-studio",
+    "job_location":".vgj-card-loc",
+    "job_description":".vgj-modal-desc",
+    "job_post_date":".vgj-card-age",
+    "job_post_date_prefix":"On board since ",
+    "pagination":".vgj-page-btn:last-child",
+    "click_each_job": true,
+    "clicks_per_job_before_parsing":[
+        {
+            "description": "\"Read more\" for the full description",
+            "target": ".vgj-modal-readmore",
+            "optional": true          
+        }
+        ],
+    "clicks_per_job_after_parsing": [
+        {
+            "description": "Outside the modal to clean the window",
+            "position": { "x": 0, "y": 0 }
+        }
+        ]
+}

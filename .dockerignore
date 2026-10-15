@@ -1,0 +1,21 @@
+# Git
+.git
+.github
+.gitignore
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+
+# Environment configurations and logs
+.env
+*.log
+
+# Docker specifics
+Dockerfile
+docker-compose.yml

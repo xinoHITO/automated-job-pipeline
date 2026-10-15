@@ -1,0 +1,34 @@
+{
+  "score_threshold": 65,
+  "scoring_matrix": {
+    "remote_only": {
+      "prompt_instruction": "CRITICAL: If the job explicitly states on-site or hybrid, set total score to 0 and SKIP. Must be fully remote."
+    },
+    "title_gate": {
+      "points_allocated": 25,
+      "target_keywords": ["backend", "python", "api", "server", "infrastructure"],
+      "medium_keywords": ["software engineer", "developer", "automation", "integration"],
+      "instant_reject_keywords": ["frontend", "ui designer", "ux", "artist", "animator", "marketing"],
+      "prompt_instruction": "TITLE FILTER GATE (Max {points_allocated} pts): Match title against [{target_keywords}]. Medium priority for [{medium_keywords}]. CRITICAL: If title contains [{instant_reject_keywords}], set total score to 0 immediately."
+    },
+    "tech_stack": {
+      "points_allocated": 35,
+      "core_stack": ["python", "fastapi", "django", "flask", "postgresql", "docker", "aws", "gcp", "rest api"],
+      "secondary_stack": ["sql", "redis", "celery", "kafka", "graphql", "typescript"],
+      "subsystems": ["microservices", "distributed systems", "ci/cd", "message queues", "caching", "authentication"],
+      "prompt_instruction": "TECH STACK DEPTH (Max {points_allocated} pts): Major weights for [{core_stack}]. Half points for [{secondary_stack}]. Bonus for [{subsystems}]."
+    },
+    "career_level": {
+      "points_allocated": 20,
+      "preferred_tiers": ["mid", "mid-level", "senior"],
+      "senior_tiers": ["lead", "principal", "staff"],
+      "prompt_instruction": "CAREER BAND (Max {points_allocated} pts): Preferred [{preferred_tiers}]. Less priority for [{senior_tiers}]."
+    },
+    "domain_bonuses": {
+      "points_allocated": 20,
+      "gaming_industry": ["gaming", "games", "game servers", "live-ops", "multiplayer backend"],
+      "devops": ["kubernetes", "terraform", "observability", "monitoring"],
+      "prompt_instruction": "DOMAIN BONUSES (Max {points_allocated} pts): Gaming industry backend [{gaming_industry}] or DevOps [{devops}] get bonus points."
+    }
+  }
+}

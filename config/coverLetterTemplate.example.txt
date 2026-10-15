@@ -1,0 +1,21 @@
+Dear Hiring Manager,
+
+I am writing to express my strong interest in the [JOB_TITLE] position at [COMPANY_NAME].
+
+With [X] years of experience building complex systems — including data pipelines, client-server architectures, and automation tooling — I am confident I can contribute effectively to your team.
+
+Recently, I designed and shipped an end-to-end automation pipeline in Python (web scraping, LLM semantic analysis, external API integration) that processes data from multiple platforms daily. This project demonstrates my ability to:
+
+- Design resilient systems with retry logic, error handling, and rate-limit management
+- Integrate external APIs (REST, LLM providers) with exponential backoff strategies
+- Build containerized applications with Docker and expose them via FastAPI
+- Write clean, testable code with pytest coverage
+
+I am particularly drawn to [COMPANY_NAME] because [REASON — e.g., "your work on distributed systems", "your open-source contributions", "your mission to..."].
+
+I would welcome the opportunity to discuss how my background in systems engineering and automation can benefit your team.
+
+Best regards,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_LINKEDIN]

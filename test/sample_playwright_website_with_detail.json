@@ -1,0 +1,16 @@
+{
+    "site_name": "https://gamejobs.co",
+    "starting_url": "https://gamejobs.co/search?t=Engineering&w=Remote",
+    "use_playwright" : true,
+    "job_item": ".job",
+    "pagination":".paging > a.btn-hollow:last-child",
+    "jobs_cap": -1,
+    "job_url": ".title",
+    "job_title": ".title",
+    "job_company": ".c",
+    "job_description": ".job-description",
+    "is_date_in_detail": true,
+    "job_post_date":"article.w800 > div:has(a.w) + div",
+    "is_location_in_detail": true,
+    "job_location": "a.w"
+}

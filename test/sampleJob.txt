@@ -1,0 +1,63 @@
+Your Quest:
+
+As our Principal  Game  Programmer (f/m/x), you will be the most senior individual contributor on the programming team. Your mission includes setting the technical bar across Unreal Engine, our development tools, and gameplay. Additionally, you will own the hardest technical problems and drive architecture in close collaboration with the Technical Director. Mentoring senior, regular, and junior programmers is a core, formal part of the role.
+
+Your Mission Includes:
+
+Unity3d
+Drive technical and architectural decisions across major systems
+Take ownership of the most technically demanding work: deep optimization, cross-system refactors, and high-risk areas of the codebase
+Set and uphold technical standards and best practices
+Mentor programmers of all levels through pairing, code reviews, and technical guidance, fostering growth and unblocking complex problems
+Own documentation and knowledge sharing for the systems and domains you know best
+Identify, evaluate, and prototype new tools and workflows to improve the team's output
+Contribute to hiring through technical interviews and onboarding
+
+
+Your Toolkit:
+
+10+ years of experience in the game development industry
+Expert-level proficiency in C++, with a deep understanding of programming principles, system design, and large-scale architectures
+Extensive experience in game programming across engine-level work and tools development
+Deep knowledge of Unreal Engine internals and major subsystems
+A proven track record of shipping AA/AAA titles with significant ownership over core systems
+Strong debugging, profiling, and optimization skills across CPU and GPU, including platform-specific work
+Demonstrated mentorship experience: growing other programmers through pair programming, code reviews, and technical coaching
+Excellent communication and documentation skills, with the ability to explain complex concepts to both engineers and non-engineers
+Sound judgment on when to build, when to refactor, and when to ship as-is
+2+ years of console programming experience (PlayStation, Xbox)
+This position is available for candidates based in time zones within +/- 2 hours of Germany (CET/CEST). We are also open to applicants located anywhere who are willing and able to relocate to Germany
+
+
+You Get Extra XP for:
+
+Deep specialization in a particular domain (gameplay, tools, rendering, animation, or AI)
+Prior experience on a Principal/Staff IC track at another studio
+Console certification work (PlayStation, Xbox)
+Having shipped at least one AA/AAA game
+
+
+Power-Ups You Receive:
+
+At DECK 13 Interactive, our people are at the heart of everything we do. We believe in creating an environment where you feel valued, supported, and empowered to do your best work. Here's what we offer to make that happen:
+A modern, centrally located office in Frankfurt, Germany (near Messe)
+Free language courses to help you expand your skills
+Monthly allowances for remote working and gym memberships
+A monthly allowance for the Deutschlandticket to ease your commute
+Tax-free Probonio vouchers available every month
+Free access to an online mental health platform (Bloom) to support your well-being
+Opportunities for career growth with a yearly learning & development budget
+28 days of paid vacation, plus the 24th and 31st of December off
+
+
+Our Commitment to Inclusivity:
+
+DECK 13 Interactive is an equal opportunity employer. We celebrate diversity and are committed to creating an inclusive environment for all employees. We welcome applications from all individuals regardless of gender, race, ethnicity, religion, sexual orientation, age, disability, or any other characteristic that makes you unique.
+
+We believe that diverse teams create the best games, and we're dedicated to building a workplace where everyone can thrive.
+
+About us
+
+At DECK 13 Interactive, we're more than just a game development studio. We're a diverse, passionate community of creators dedicated to crafting unforgettable gaming experiences. Since our founding in 2001, in the heart of Frankfurt, Germany, we've been pushing the boundaries of what's possible in PC and console games. Now part of the PulluP Entertainment group, our team of around 100 talented professionals continues to shape the future of  gaming.
+
+We're the minds behind titles like Lords of the Fallen, The Surge series, and Atlas Fallen, known for their rich worlds and immersive gameplay. But we believe the best  games are still ahead of us, and that's where you come in.
