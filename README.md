@@ -78,7 +78,7 @@ Requires **Python 3.11+**.
 
 ```bash
 git clone https://github.com/xinoHITO/automated-job-pipeline.git
-cd job-pipeline
+cd automated-job-pipeline
 python -m venv .venv 
 source .venv/bin/activate   # On Windows use this: .venv\Scripts\activate
 pip install -r requirements.txt
