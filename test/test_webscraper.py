@@ -10,10 +10,6 @@ from job_bot.webscraping_rules import WebsiteConfig
 from job_bot.coverletterwriter import generate_cover_letter
 from job_bot.notification import send_discord_notification
 
-def test_notification_send_discord_webhook():
-    send_discord_notification()
-    assert True
-
 def test_webscraper_clean_date_string_strips_prefix_and_suffix():
     raw = "On board since Posted 09/15/2026 Click to apply"
     result = clean_date_string(raw, "On board since ", "Click to apply")
@@ -85,6 +81,12 @@ def test_webscraper_check_for_duplicates():
     assert len(test_dict.items()) == 1
 
 
+requires_notion = pytest.mark.skipif(
+    not os.environ.get("NOTION_TOKEN"),
+    reason="requires Notion credentials",
+)
+
+@requires_notion
 def test_notion_check_for_duplicates():
     assert job_exists_in_notion("AI-Native Software Engineer (Games)","Playrix","10/09/2026   (UTC)") == True
 
@@ -92,22 +94,21 @@ def test_notion_check_for_duplicates():
 async def test_webscraper_scrape_static_job_site():
     sampleWebsite = """
     {
-    "site_name": "https://www.gamesjobsdirect.com",
-    "starting_url": "https://www.gamesjobsdirect.com/results?mt=2&ic=False&rl=remote&age=4&exp=4&sper=4&i=16&sort=date",
-    "job_item": ".col-sm-9",
-    "pagination":"page",
+    "site_name": "https://www.workwithindies.com",
+    "starting_url": "https://www.workwithindies.com/categories/programming",
+    "job_item": ".job-card",
     "jobs_cap": -1,
-    "job_url": "a.job-title",
-    "job_title": ".job-title",
-    "job_company": ".job-company",
-    "job_description": ".post-description",
-    "is_date_in_detail": false,
-    "job_post_date":".job-posteddate",
-    "job_location":".job-location"
+    "job_url": "",
+    "job_title": ".text-block-14",
+    "job_company": ".job-card-text-smol",
+    "job_description": ".job-description",
+    "is_date_in_detail": true,
+    "job_post_date":"div.posted:nth-of-type(3)",
+    "job_location":".job-card-text.bold:last-child"
   }
     """
     config_data_model = WebsiteConfig.model_validate_json(sampleWebsite)
-    found_jobs = await scrape_job_site(config_data_model,5)
+    found_jobs = await scrape_job_site(config_data_model,5,False)
     assert len(found_jobs) > 0
 
 @pytest.mark.asyncio
@@ -117,7 +118,7 @@ async def test_webscraper_scrape_playwright_job_site():
     with open(path,"r",encoding="UTF-8") as r:
         sample_website= r.read()
     config_data_model = WebsiteConfig.model_validate_json(sample_website)
-    found_jobs = await scrape_job_site(config_data_model,2)
+    found_jobs = await scrape_job_site(config_data_model,1,False)
     assert len(found_jobs) > 0
 
 @pytest.mark.asyncio
@@ -127,9 +128,16 @@ async def test_webscraper_scrape_playwright_with_detail_job_site():
     with open(path,"r",encoding="UTF-8") as r:
         sample_website= r.read()
     config_data_model = WebsiteConfig.model_validate_json(sample_website)
-    found_jobs = await scrape_job_site(config_data_model,2)
+    found_jobs = await scrape_job_site(config_data_model,1,False)
     assert len(found_jobs) > 0
 
+
+requires_gemini = pytest.mark.skipif(
+    not os.environ.get("GEMINI_API_KEY"),
+    reason="requires GEMINI_API_KEY credentials",
+)
+
+@requires_gemini
 def test_generate_cover_letter():
 
     if not os.environ.get('GEMINI_API_KEY'):

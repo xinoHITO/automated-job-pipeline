@@ -43,11 +43,11 @@ async def scrape_all_job_sites(webscraping_config_path,max_days_since_job_posted
     log(f"\n[INFO] Aggregated {len(found_jobs)} deep job profiles.")
     return found_jobs
 
-async def scrape_job_site(config, max_days_since_job_posted):
+async def scrape_job_site(config, max_days_since_job_posted, check_duplicates_in_notion:bool = True):
     if config.use_playwright:
-        new_jobs = await __scrape_playwright(config,max_days_since_job_posted)                    
+        new_jobs = await __scrape_playwright(config,max_days_since_job_posted,check_duplicates_in_notion)                    
     else:
-        new_jobs = __scrape_static_site(config,max_days_since_job_posted)
+        new_jobs = __scrape_static_site(config,max_days_since_job_posted,check_duplicates_in_notion)
     return new_jobs
 
 def add_new_job(jobs_dict:dict,the_new_job):
@@ -81,7 +81,9 @@ def go_to_static_website(prepared_url:str,headers:dict[str,str]):
     return response
 
 def __scrape_static_site(  config_model:WebsiteConfig,
-                        max_days_since_job_posted):
+                        max_days_since_job_posted:int,
+                        check_duplicates_in_notion:bool = True
+                        ):
     """Scrapes main page via your discovered job-card class and crawls into each link for full details."""
     log(f"[SCRAPE] Accessing {config_model.site_name} index...")
     jobs = []
@@ -159,12 +161,12 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                     log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> {Fore.RED} [ERROR] Couldn't get link to job item... skipping:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
                     continue
 
-                exists_in_db = notion.url_exists_in_notion(link)
+                exists_in_db = notion.url_exists_in_notion(link) if check_duplicates_in_notion else False
                 if exists_in_db:                
                     log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]   └─> Already exists in database with duplicated URL... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
                     continue
 
-                is_duplicated = notion.job_exists_in_notion(job_title,job_company,job_post_date)
+                is_duplicated = notion.job_exists_in_notion(job_title,job_company,job_post_date) if check_duplicates_in_notion else False
                 if is_duplicated:
                     log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Already exists in database with same title,studio and posted_date... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
                     continue
@@ -294,6 +296,7 @@ async def block_unnecessary_resources(route):
 
 async def __scrape_playwright(  config_model:WebsiteConfig,                                
                                 max_days_since_job_posted:int,
+                                check_duplicates_in_notion:bool = True
                                 ):
     log("🚀 Launching headless browser...")
     result = []
@@ -390,7 +393,9 @@ async def playwright_parse_html(    context:BrowserContext,
                                     config_model:WebsiteConfig,
                                     max_days_since_job_posted,
                                     job_cards_count:int,
-                                    url):
+                                    url:str,
+                                    check_duplicates_in_notion:bool = True
+                                    ):
 
     scraped_jobs = []
     log(f"[INFO] Discovered {Fore.GREEN}{job_cards_count}{Style.RESET_ALL} matching job cards on {Fore.MAGENTA}{url}{Style.RESET_ALL}")
@@ -418,13 +423,14 @@ async def playwright_parse_html(    context:BrowserContext,
                 log(f"[{index+1}/{job_cards_count}]    [Warning] Error on item index {index}: {e}")
 
         await automate_per_job_click(page,config_model.clicks_per_job_before_parsing)
-
         parsed_job = await playwright_parse_job_card(   context,
                                                         page,
                                                         card,
                                                         job_cards_count,
                                                         index,
-                                                        config_model)
+                                                        config_model,
+                                                        check_duplicates_in_notion
+                                                    )
         if parsed_job is not None:
             job_posted_date = parsed_job.get("date_posted",None)
             title = parsed_job["title"]
@@ -450,7 +456,9 @@ async def playwright_parse_job_card(    context:BrowserContext,
                                         job_card_selector:Locator,
                                         job_cards_count:int,
                                         index:int,
-                                        config_model:WebsiteConfig):
+                                        config_model:WebsiteConfig,
+                                        check_duplicates_in_notion:bool = True
+                                        ):
     detail_page:Page = None
     try:
         title = await job_card_selector.locator(config_model.job_title).inner_text() if await job_card_selector.locator(config_model.job_title).is_visible(timeout=2000) else "Unknown Title"
@@ -469,7 +477,7 @@ async def playwright_parse_job_card(    context:BrowserContext,
             job_url = "No Link"
             log(f"[{index+1}/{job_cards_count}] Invalid URL couldn't parse:\"{job_url}\" in {Fore.CYAN}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {location} - {e}")
    
-        exists_in_db = notion.url_exists_in_notion(job_url)
+        exists_in_db = notion.url_exists_in_notion(job_url) if check_duplicates_in_notion else False
         if exists_in_db:                
             log(f"[{index+1}/{job_cards_count}]  └─> Already exists in database with duplicated URL... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {location}")
             return None
