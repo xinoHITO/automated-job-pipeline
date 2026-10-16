@@ -263,7 +263,7 @@ Each site is one entry in the scraping rules file. No Python required:
 
 ### Scoring matrix
 
-`config/ai_filter_rules.example.json` defines the evaluation matrix: score threshold, title gate (target / medium / instant-reject keywords), tech stack weights, career band, and domain bonuses. Edit the keywords and points to match your profile.
+`config/hiring_rules.example.json` defines the evaluation matrix: score threshold, title gate (target / medium / instant-reject keywords), tech stack weights, career band, and domain bonuses. Edit the keywords and points to match your profile.
 
 ---
 
