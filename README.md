@@ -1,4 +1,4 @@
-# Job Pipeline
+# Automated Job Pipeline
 
 **Config-driven job discovery and AI-assisted application pipeline.**
 Scrape job postings across multiple platforms, filter them with a rule-based scoring engine, and generate tailored cover letters with LLMs — all from declarative JSON configuration.
