@@ -130,8 +130,10 @@ def update_notion_database_with_file(json_file):
 
 def update_notion_database(json_text:str):
     log(f"\n ---NOTION UPLOAD START--- ")
-
-    entries = json.loads(json_text)
+    try:
+        entries = json.loads(json_text)
+    except Exception as e:
+        log(f"Couldn't parse JSON text in file. Cannot upload to Notion database")
 
     if entries is not None and len(entries) > 0:
         log(f"Found {len(entries)} entries to upload. Starting process...")
@@ -258,4 +260,4 @@ def update_notion_database(json_text:str):
     log(f" ---NOTION UPLOAD FINISHED--- ")
 
 if __name__ =="__main__":
-    update_notion_database(f"{globals.base_dir}/temp/entries.json")
+    update_notion_database_with_file(f"{globals.base_dir}/temp/entries.json")

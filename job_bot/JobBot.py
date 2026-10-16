@@ -391,7 +391,7 @@ async def main(days_since_job_posted: int,
     with open(output_filename, "w", encoding="utf-8") as f:
         json.dump(matched_results, f, indent=2, ensure_ascii=False)
 
-    notion.update_notion_database(output_filename)
+    notion.update_notion_database_with_file(output_filename)
     log(f"\n===== RUN COMPLETE =====\n Saved {len(matched_results)} matches to '{output_filename}'")
 
     if send_notification:
