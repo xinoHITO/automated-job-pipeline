@@ -32,9 +32,27 @@ echo "Changing to '$(dirname "$0")'"
 # ─── 3. Go to the repo root (works from cron, which starts in $HOME) ───
 cd "$(dirname "$0")" || exit 1
 
-if [ ! -f .env ]; then
-    echo "ERROR: .env not found in $(pwd). Copy .env.example and fill it in first."
-    exit 1
+if [ -f .env ]; then
+    # Read line by line, splitting strictly on the first '=' character
+    while IFS='=' read -r key value || [ -n "$key" ]; do
+        
+        # 1. Skip comments (lines starting with #) and empty lines
+        [[ "$key" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "$key" ]] && continue
+        
+        # 2. Clean up Windows carriage returns (\r) and trailing whitespaces
+        key=$(echo "$key" | tr -d '\r[:space:]')
+        
+        # 3. Strip surrounding single or double quotes from the value if they exist
+        value=$(echo "$value" | tr -d '\r' | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+        
+        # 4. Safely export using an indirect variable assignment
+        # This prevents Bash from evaluating code inside the value
+        export "$key"="$value"
+
+    done < .env
+else
+    echo "Warning: .env file not found. This machine won't go to sleep when run finishes"
 fi
 
 git pull || echo "WARN: git pull failed, continuing with local code"
