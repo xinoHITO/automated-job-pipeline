@@ -50,8 +50,9 @@ docker run --rm --env-file .env -v "$(pwd)"/scraper_logs:/app/output playwright-
 
 echo "🎉 Docker container built and deployed successfully!"
 
-echo "💤 Going to sleep now"
 if [ "${SLEEP_AFTER_RUN:-0}" = "1" ]; then
+	echo "💤 Going to sleep now"
+
     if [ "$OS" = "Darwin" ]; then
         pmset sleepnow
     elif [ "$OS" = "Linux" ]; then
