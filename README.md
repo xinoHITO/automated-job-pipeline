@@ -339,6 +339,7 @@ GitHub Actions, GitLab CI, and similar services use **datacenter IP ranges** tha
 - [x] Memory profiling (psutil)
 - [x] pytest coverage for core parsing logic
 - [ ] Multi-profile scoring architecture (switch job-search targets via JSON profiles)
+- [ ] Use LLM (Gemini or other) to auto-generate the JSON config files based on a CV/Portfolio
 - [ ] PostgreSQL persistence layer (replace SQLite)
 - [ ] Cloud deployment of API (Railway/Render) with local scraping
 - [ ] Expanded pytest coverage (Playwright mocks)
