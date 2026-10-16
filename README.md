@@ -137,7 +137,7 @@ Jobs are handled as **tickets**: `POST /run` enqueues work and returns immediate
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/run` | Enqueue a pipeline run (async, returns 202 + ticket id) |
+| `POST` | `/run` | Enqueue a pipeline run (async, returns 202 + ticket id + link to check ticket status) |
 | `GET` | `/status?ticket_id=<id>` | Ticket status: `in queue` / `running` / `done` / `failed` |
 | `GET` | `/jobs?ticket_id=<id>&min_score=70` | Jobs from a finished ticket, filtered by score |
 
