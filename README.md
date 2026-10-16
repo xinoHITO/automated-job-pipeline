@@ -105,7 +105,7 @@ Next don't forget to fill in the values inside .env! Here's a list of what you n
 | `CV_FILE` | Path to your resume PDF (default: `data/resume.pdf`) |
 | `PORTFOLIO_FILE` | Path to your portfolio PDF (default: `data/portfolio.pdf`) |
 | `COVER_LETTER_TEMPLATE` | Cover letter template path (default: `config/coverLetterTemplate.example.txt`) |
-| `API_SECRET_TOKEN` | Shared secret required by `POST /run` (API mode only) |
+| `API_SECRET_TOKEN` | Shared secret for API auth — clients must send it as the `X-API-Key` header on `POST /run` (API mode only) |
 | `MAX_CONCURRENT_TICKETS` | Max pipeline runs processed at the same time (default: `2`) (API mode only)|
 | `SLEEP_AFTER_RUN` | For cron jobs (through `run_daily.sh`) set to `1` if you want the host to go to sleep after running the pipeline|
 
@@ -133,17 +133,18 @@ Interactive docs available at `http://127.0.0.1:8080/docs` (Swagger UI).
 
 Jobs are handled as **tickets**: `POST /run` enqueues work and returns immediately (202); you poll `/status` with the ticket id, then read results from `/jobs`.
 
+`POST /run` is protected by an API key: the client must send the `API_SECRET_TOKEN` value in the **`X-API-Key` HTTP header**. `GET /status` and `GET /jobs` are open (they only accept a ticket id). If `API_SECRET_TOKEN` is not set, the server generates a random one at startup and prints it to the console — set it explicitly in `.env` for anything beyond local testing.
+
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/run` | Enqueue a pipeline run (async, returns 202 + ticket id) |
 | `GET` | `/status?ticket_id=<id>` | Ticket status: `in queue` / `running` / `done` / `failed` |
 | `GET` | `/jobs?ticket_id=<id>&min_score=70` | Jobs from a finished ticket, filtered by score |
 
-`POST /run` body:
+`POST /run` body (auth via `X-API-Key` header, not in the body):
 
 | Field | Default | Purpose |
 |---|---|---|
-| `secret_token` | — | Must match `API_SECRET_TOKEN` |
 | `max_days` | `15` | Ignore postings older than N days |
 | `write_cover_letters` | `false` | Generate cover letters for jobs that pass screening |
 | `profile` | `false` | Run with memory profiling (psutil) |
@@ -152,10 +153,11 @@ Jobs are handled as **tickets**: `POST /run` enqueues work and returns immediate
 Example:
 
 ```bash
-# 1. Enqueue a run
+# 1. Enqueue a run (API key goes in the X-API-Key header)
 curl -X POST http://127.0.0.1:8080/run \
   -H "Content-Type: application/json" \
-  -d '{"secret_token": "YOUR_TOKEN", "max_days": 10, "write_cover_letters": true}'
+  -H "X-API-Key: YOUR_TOKEN" \
+  -d '{"max_days": 10, "write_cover_letters": true}'
 # → {"id": "<ticket_id>", "status": "in queue", "poll_url": "..."}
 
 # 2. Poll until done
