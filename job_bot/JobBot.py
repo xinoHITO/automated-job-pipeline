@@ -1,3 +1,4 @@
+import asyncio
 import os
 import json
 from colorama import Fore, Style
@@ -381,6 +382,9 @@ async def main(days_since_job_posted: int,
         else:
             log(Fore.RED + f" └──> [SKIPPED] Score:{filter_check['total_score']} Rejected by screening engine. Reason: {filter_check['reason']}"+Style.RESET_ALL)
             log(f" └──> Url:{job['link']}")
+
+        await asyncio.sleep(0.1)
+
 
     # Save output to project disk    
     output_filename = f"{debug.OUTPUT_FOLDER_PATH}/job_matches.json"

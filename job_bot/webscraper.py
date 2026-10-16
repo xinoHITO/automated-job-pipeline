@@ -448,7 +448,7 @@ async def playwright_parse_html(    context:BrowserContext,
         index = index+1
 
 
-    log(f"[FOUND] {url} completed scan for {job_cards_count} positions.")
+    log(f"[FOUND] {Fore.MAGENTA}{url}{Style.RESET_ALL} completed scan for {Fore.GREEN}{job_cards_count}{Style.RESET_ALL} positions.")
     return scraped_jobs
 
 async def playwright_parse_job_card(    context:BrowserContext,

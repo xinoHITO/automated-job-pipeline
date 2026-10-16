@@ -74,6 +74,7 @@
     "use_playwright" : true,
     "job_item": ".job",
     "pagination":".paging > a.btn-hollow:last-child",
+    "layer_to_wait_for": "results",
     "jobs_cap": -1,
     "job_url": ".title",
     "job_title": ".title",

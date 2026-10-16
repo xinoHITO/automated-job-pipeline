@@ -119,18 +119,21 @@ def is_valid_url(url: str) -> bool:
     except ValueError:
         return False
 
-def update_notion_database(json_file):
-    log(f"\n ---NOTION UPLOAD START--- ")
-
-    # 2. Load your local JSON file
+def update_notion_database_with_file(json_file):
+    # Load your local JSON file
     try:
-        with open(json_file, "r", encoding="utf-8") as file:
-            entries = json.load(file)
+        with open(json_file, "r", encoding="utf-8") as file:            
+            update_notion_database(file.read())
     except FileNotFoundError:
         log(f"Error: Could not find file {json_file}. Please check the file path.")
-        exit()
+        exit()    
 
-    if len(entries) > 0:
+def update_notion_database(json_text:str):
+    log(f"\n ---NOTION UPLOAD START--- ")
+
+    entries = json.loads(json_text)
+
+    if entries is not None and len(entries) > 0:
         log(f"Found {len(entries)} entries to upload. Starting process...")
     else:
         log(f"Found 0 entries to upload. Ending process")
@@ -231,7 +234,8 @@ def update_notion_database(json_file):
                             }
                         })
         except Exception as e:
-            log(f"Unexpected error when parsing new entry index:{index} - error: {e}")
+            log(f"Unexpected error when parsing new entry {Fore.GREEN}{index}{Style.RESET_ALL} - {Fore.RED}{e}{Style.RESET_ALL}")
+
             continue
         try:
             # Create the page in Notion
@@ -246,9 +250,9 @@ def update_notion_database(json_file):
             time.sleep(0.35)
 
         except APIResponseError as e:
-            log(f"APIResponseError on entry {index} ({job_title}): {e}")
+            log(f"APIResponseError on entry {Fore.GREEN}{index} {Fore.CYAN}({job_title}){Style.RESET_ALL}: {Fore.RED}{e}{Style.RESET_ALL}")
         except Exception as e:
-            log(f"Unexpected error when uploading new row to Notion databse: {e}")
+            log(f"Unexpected error when uploading new row to Notion databse: {Fore.RED}{e}{Style.RESET_ALL}")
         
 
     log(f" ---NOTION UPLOAD FINISHED--- ")

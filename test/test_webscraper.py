@@ -3,6 +3,7 @@ import pytest
 
 from job_bot.webscraper import clean_date_string, is_job_too_old, add_new_job, scrape_job_site
 from job_bot.notion import job_exists_in_notion
+from job_bot.notion import update_notion_database
 from job_bot.JobBot import run_hiring_rules
 from job_bot.globals import DEFAULT_HIRING_RULES_PATH
 from job_bot.globals import base_dir
@@ -89,6 +90,49 @@ requires_notion = pytest.mark.skipif(
 @requires_notion
 def test_notion_check_for_duplicates():
     assert job_exists_in_notion("AI-Native Software Engineer (Games)","Playrix","10/09/2026   (UTC)") == True
+
+@requires_notion
+def test_notion_add_job_to_db():
+    json_text = """[
+  {
+    "date_posted": "10/15/26",
+    "date_found": "16-10-2026",
+    "job_title": "Programmer",
+    "company": "Glinda Games",
+    "location": "Remote",
+    "link": "https://gamejobs.co/Programmer-at-Glinda-Games",
+    "match_reason": "Found title keyword [programmer] and [Unity, gameplay, gameplay systems, networking, AI, experienced, pipelines] keywords in description",
+    "total_score": 120,
+    "generated_cover_letter": "None"
+  },
+  {
+    "date_posted": "10/15/26",
+    "date_found": "16-10-2026",
+    "job_title": "Unity Developer (Animation, Combat Gameplay)",
+    "company": "Finitude",
+    "location": "Remote",
+    "link": "https://gamejobs.co/Unity-Developer-Animation-Combat-Gameplay-at-Finitude",
+    "match_reason": "Found insta-win keyword [unity] in job title",
+    "total_score": 100,
+    "generated_cover_letter": "None"
+  },
+  {
+    "date_posted": "10-15-2026",
+    "date_found": "16-10-2026",
+    "job_title": "Unity Character Controller Developer",
+    "company": "Happiest Dark Corner",
+    "location": "Anywhere",
+    "link": "https://www.workwithindies.com/careers/happiest-dark-corner-unity-character-controller-developer",
+    "match_reason": "Found insta-win keyword [unity] in job title",
+    "total_score": 100,
+    "generated_cover_letter": "None"
+  }
+]"""
+    try:
+        update_notion_database(json_text)
+        assert True
+    except Exception:
+        assert False            
 
 @pytest.mark.asyncio
 async def test_webscraper_scrape_static_job_site():
