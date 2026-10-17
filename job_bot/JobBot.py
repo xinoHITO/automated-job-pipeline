@@ -333,8 +333,8 @@ async def main(days_since_job_posted: int,
     log("===== JOB BOT PIPELINE STARTING =====",True)
     log(f"max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")
     log(f"scraping rules:{scraping_rules_path}")
-
-    all_found_jobs = await webscraper.scrape_all_job_sites(scraping_rules_path,days_since_job_posted)
+    
+    all_found_jobs = await webscraper.scrape_all_job_sites(f"{globals.base_dir}/{scraping_rules_path}",days_since_job_posted)
     matched_results = []
     
     for idx, (key,job) in enumerate(all_found_jobs.items()):        
@@ -344,7 +344,7 @@ async def main(days_since_job_posted: int,
         #log(f" └──> Running screening check using {FAST_FILTER_MODEL}...")
         #rules_cfg = load_scoring_rules()
         #filter_check = run_quick_filter(FAST_FILTER_MODEL, job,rules_cfg)        
-        filter_check = run_hiring_rules(hiring_rules_path,job["title"],job["description"],job["location"])
+        filter_check = run_hiring_rules(f"{globals.base_dir}/{hiring_rules_path}",job["title"],job["description"],job["location"])
         
         if filter_check["match_status"] == "MATCH":
             log(Fore.GREEN +f" └──> [PASSED] Score:{filter_check['total_score']} Fits basic filters. Reason: {filter_check['reason']} " +Style.RESET_ALL)

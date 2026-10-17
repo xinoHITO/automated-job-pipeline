@@ -208,7 +208,7 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                     "date_posted":job_post_date,                
                     "description": full_description,                
                 })
-                log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Deep Crawling Position Detail:{Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
+                log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Deep Crawling Position Detail:{Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location} | description:{full_description[:100]}")
                 write_debug_file(f"jobOutput_{job_title}_{job_company}.txt",str(jobs[len(jobs)-1]))
             
             if len(cards) == 0 or config_model.pagination == "":
@@ -315,7 +315,7 @@ async def __scrape_playwright(  config_model:WebsiteConfig,
                                             ],)
             context = await browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                viewport={"width":800, "height":600},
+                #viewport={"width":800, "height":600},
                 device_scale_factor=1
             )
             page = await context.new_page()
@@ -415,7 +415,7 @@ async def playwright_parse_html(    context:BrowserContext,
             # Resolve all matching elements currently on the DOM
             try:
                 # Scroll into view and click the specific job item link
-                await card.scroll_into_view_if_needed()                
+                await card.scroll_into_view_if_needed()
                 await card.click()
                 log(f"[{index+1}/{job_cards_count}]  └─> 🖱️ ✅ Clicked: {Fore.GREEN}Job card{Style.RESET_ALL}")
                 time.sleep(3.0) # Wait for job details panel to populate
@@ -436,12 +436,15 @@ async def playwright_parse_html(    context:BrowserContext,
             title = parsed_job["title"]
             studio = parsed_job["company"]
             location = parsed_job["location"]
+            description = parsed_job["description"]
+            if description is None:
+                description = "None"
             if job_posted_date is not None:
                 if is_job_too_old(job_posted_date,max_days_since_job_posted):                            
                     log(f"[{index+1}/{job_cards_count}]  └─> Job posted over {max_days_since_job_posted} days ago... {Fore.RED}skipping:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {job_posted_date} | {location}")
                     break
             scraped_jobs.append(parsed_job)
-            log(f"[{index+1}/{job_cards_count}]  └─> Deep Crawling Position Detail:{Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {job_posted_date} | {location}")
+            log(f"[{index+1}/{job_cards_count}]  └─> Deep Crawling Position Detail:{Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {job_posted_date} | {location} | description:{description[:100]}")
         
         await automate_per_job_click(page,config_model.clicks_per_job_after_parsing)
 
@@ -462,7 +465,7 @@ async def playwright_parse_job_card(    context:BrowserContext,
     detail_page:Page = None
     try:
         title = await job_card_selector.locator(config_model.job_title).inner_text() if await job_card_selector.locator(config_model.job_title).is_visible(timeout=2000) else "Unknown Title"
-        studio = await job_card_selector.locator(config_model.job_company).inner_text() if await job_card_selector.locator(config_model.job_company).is_visible(timeout=2000) else "Unknown Studio"
+        studio = await job_card_selector.locator(config_model.job_company).inner_text() if await job_card_selector.locator(config_model.job_company).is_visible(timeout=2000) else "Unknown Studio"        
         location = await job_card_selector.locator(config_model.job_location).inner_text() if await job_card_selector.locator(config_model.job_location).is_visible(timeout=2000) else "Unknown Location"
 
         job_url = "No Link"
@@ -501,6 +504,7 @@ async def playwright_parse_job_card(    context:BrowserContext,
             await detail_page.close()
         else:
             try:             
+                await debug.take_playwright_screenshot(page,f"{title}_{studio}_detail_screenshot")
                 post_date_locator = job_card_selector.locator(config_model.job_post_date)
                 try:
                     posted_date = await post_date_locator.inner_text(timeout=10000)
