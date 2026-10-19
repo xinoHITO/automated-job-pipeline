@@ -10,11 +10,11 @@ def run(
     max_days: int = typer.Option(15,"--max-days","-d", help="Ignore postings older than N days"),
     scraping_rules_path: str = typer.Option(globals.DEFAULT_WEB_SCRAPING_CONFIG_PATH,"--scraping-rules","-s", help="Path for a scraping rules json file"),
     hiring_rules_path: str = typer.Option(globals.DEFAULT_HIRING_RULES_PATH,"--hiring-rules","-h", help="Path for a config json file that defines hiring rules"),
-    profile: bool = typer.Option(False,"--profile","-p", help="Wether to profile the app"),
+    profiling: bool = typer.Option(False,"--profiling","-p", help="Wether to profile the app"),
     send_notification: bool = typer.Option(False,"--notification","-n", help="Wether to send a discord notification when pipeline ends"),
 ):
     from . import JobBot
-    if profile:
+    if profiling:
         from . import profiler
         profiler.start_profiling()
         try:

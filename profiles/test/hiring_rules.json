@@ -1,0 +1,167 @@
+{
+  "title_instant_win_keywords": [
+    "unity"
+  ],
+  "title_target_keywords": [
+    "Unity Developer",
+    "Unity Programmer",
+    "Gameplay Programmer",
+    "Game Developer",
+    "Game Programmer",
+    "C# Developer",
+    "Tools Programmer",
+    "Engine Programmer",
+    "gameplay",
+    "programmer",
+    "C#",
+    "engineer",
+    "developer",
+    "tools"
+  ],
+  "title_exclude_keywords": [
+    "artist",
+    "animator",
+    "ui designer",
+    "ux designer",
+    "producer",
+    "project manager",
+    "community manager",
+    "marketing",
+    "sound designer",
+    "composer",
+    "writer",
+    "qa tester",
+    "game tester",
+    "roblox",
+    "minecraft"
+  ],
+  "description_scoring_rules": [
+    {
+      "topic": "Game Engine",
+      "target_keywords": [
+        "Unity",
+        "Unity3D",
+        "Unity Engine"
+      ],
+      "score_per_match": 50,
+      "score_cap": 50
+    },
+    {
+      "topic": "Game systems and architecture",
+      "target_keywords": [
+        "gameplay",
+        "gameplay architecture",
+        "gameplay programming",
+        "game architecture",
+        "game programming",
+        "gameplay feature",
+        "gameplay features",
+        "game logic",
+        "gameplay system",
+        "gameplay systems",
+        "game system",
+        "game systems"        
+      ],
+      "score_per_match": 30,
+      "score_cap": 30
+    },
+    {
+      "topic": "Specific game systems",
+      "target_keywords": [
+        "movement",
+        "combat",
+        "inventory",
+        "character controller",
+        "player controller",
+        "behaviour tree",
+        "serialization",
+        "multiplayer",
+        "networking",
+        "scriptableobject",
+        "scriptableobjects",
+        "mirror"
+      ],
+      "score_per_match": 10,
+      "score_cap": 30
+    },
+    {
+      "topic": "AI & Behavior",
+      "target_keywords": [
+        "AI",
+        "artificial intelligence",
+        "behavior tree",
+        "behaviour tree",
+        "state machine",
+        "FSM",
+        "enemy AI",
+        "NPC"
+      ],
+      "score_per_match": 10,
+      "score_cap": 30
+    },
+    {
+      "topic": "Seniority",
+      "target_keywords": [
+        "mid",
+        "mid-level",
+        "senior",
+        "sr.",
+        "experienced"
+      ],
+      "score_per_match": 10,
+      "score_cap": 10
+    },
+    {
+      "topic": "Tooling and CI/CD",
+      "target_keywords": [
+        "editor scripting",
+        "custom editor",
+        "editor tools",
+        "editor tool",
+        "tools development",
+        "tool development",
+        "pipelines",
+        "automation",
+        "CI/CD",
+        "continuous integration",
+        "deployment workflows",
+        "python"
+      ],
+      "score_per_match": 10,
+      "score_cap": 20
+    },
+    {
+      "topic": "Technical art",
+      "target_keywords": [
+        "shader",
+        "hlsl",
+        "cel-shading",
+        "Amplify",
+        "DCC-to-Unity",
+        "artist tools",
+        "anime"
+      ],
+      "score_per_match": 10,
+      "score_cap": 20
+    }
+  ],
+  "required_description_score": 55,
+  "insta_win_locations": [
+    "unknown location",
+    "latam",
+    "latin america",
+    "anywhere",
+    "global",
+    "globe",
+    "(anywhere)",
+    "worldwide",
+    "any",    
+    "any location"
+  ],
+  "require_remote":true,  
+  "locations": [
+    "Brazil",
+    "Full-Time"
+  ]
+  
+}

@@ -1,0 +1,22 @@
+Subject: Unity / C# Developer Application – Hitoshi Kanno
+
+Dear Hiring Team
+
+I am writing to express my strong interest in the C# Unity Developer position. I bring 4 years of professional game programming experience combined with a deep, independent development background. I specialize in turning complex creative design into clean, scalable systems.
+
+Here are some bullet points of my technical background that alligns with the core requirements of your engineering team:
+
+- Modular Systems & Gameplay Architecture: For my action project Colorful, I built a Modular Ability System from scratch. By decoupling gameplay logic from data, I ensured that adding, tweaking, or balancing new character skills could be done rapidly.
+- Complex Feature Implementation & Refactoring: At Quest Haven, I joined mid-project and successfully refactored their entire Building System (similar to the Sims). I cleaned up the existing architecture while implementing advanced features like precise tile-snapping, added automatic placement for tiles and the green "ghost" object placement.
+- Responsive UI Development: Also at Quest Haven, I refined the existing Search UI for navigating large asset databases. I utilized tag-based filtering and optimized the layout to guarantee responsiveness across various aspect ratios, including Ultra Wide (21:9) resolutions.
+- Cross-Discipline Collaboration: I don't develop in a vacuum; I’m used to collaborating with 3D artists. For my game Colorful I hired and collaboarted with artists to integrate 3D models, animations with my own custom shaders and VFX in the context of action gameplay. Furthermore, during my time at Jo-Mei Games, I closely collaborated with the Game Director, actively participating in core design conversations to refine mechanics.
+
+I have successfully published my own playable game demo on Steam for Colorful and developed custom Unity tools, I understand how to manage technical debt while avoiding over-engineering to keep development speed. I am highly proactive and loved participating in design, comfortable working fully remote, and excited to bring my systems-driven programming approach to your project.
+
+You can view my technical breakdowns at hitoshikanno.com. Thank you for your time and consideration.
+
+Best regards,
+
+Hitoshi Kanno
+
+Lima, Perú | hkannok@gmail.com | hitoshikanno.com

@@ -35,7 +35,7 @@ concurrency_limiter = asyncio.Semaphore(MAX_CONCURRENT_TICKETS)
 class RunRequest(BaseModel):
     max_days: int = 15
     write_cover_letters: bool = False
-    profile:bool = False
+    profiling:bool = False
     send_notification: bool = False
 
 @asynccontextmanager
@@ -145,7 +145,7 @@ async def _run_pipeline(req: RunRequest, ticket_id:str):
         ticket_result:str = None
         try:
             update_ticket_status(ticket_id,"running")
-            if req.profile:
+            if req.profiling:
                 profiler.start_profiling()
                 try:
                     result = await JobBot.main(req.max_days,req.write_cover_letters,send_notification=req.send_notification) or []

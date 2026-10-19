@@ -3,7 +3,6 @@ import os
 import json
 from colorama import Fore, Style
 from datetime import datetime
-import dateparser
 
 from . import notion as notion
 from . import webscraper as webscraper

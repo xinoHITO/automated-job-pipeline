@@ -4,12 +4,16 @@ import pytest
 from job_bot.webscraper import clean_date_string, is_job_too_old, add_new_job, scrape_job_site
 from job_bot.notion import job_exists_in_notion
 from job_bot.notion import update_notion_database
-from job_bot.JobBot import run_hiring_rules
+from job_bot.filtering import run_hiring_rules
 from job_bot.globals import DEFAULT_HIRING_RULES_PATH
 from job_bot.globals import base_dir
 from job_bot.webscraping_rules import WebsiteConfig
 from job_bot.coverletterwriter import generate_cover_letter
-from job_bot.notification import send_discord_notification
+from job_bot.profile import load_profile
+
+def test_profile_model():
+    result = load_profile("test")
+    assert result is not None
 
 def test_webscraper_clean_date_string_strips_prefix_and_suffix():
     raw = "On board since Posted 09/15/2026 Click to apply"
