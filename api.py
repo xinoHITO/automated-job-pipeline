@@ -31,6 +31,12 @@ finally:
 
 concurrency_limiter = asyncio.Semaphore(MAX_CONCURRENT_TICKETS)
 
+# ── Schemas (documentación + validación automática en /docs) ──
+class RunRequest(BaseModel):
+    max_days: int = 15
+    write_cover_letters: bool = False
+    profile:bool = False
+    send_notification: bool = False
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -132,12 +138,6 @@ async def run_pending_tickets():
 
 app = FastAPI(title="Job Pipeline API", version="0.1.0",lifespan=lifespan)
 
-# ── Schemas (documentación + validación automática en /docs) ──
-class RunRequest(BaseModel):
-    max_days: int = 15
-    write_cover_letters: bool = False
-    profile:bool = False
-    send_notification: bool = False
 
 async def _run_pipeline(req: RunRequest, ticket_id:str):
     async with concurrency_limiter:
