@@ -1,7 +1,6 @@
 import asyncio
 import requests
 import json
-from pathlib import Path
 from colorama import Fore, Back, Style
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
@@ -10,7 +9,6 @@ from playwright.sync_api import Page,Locator,BrowserContext
 import dateparser
 from datetime import datetime
 import time
-import csv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from . import notion as notion
@@ -23,22 +21,27 @@ from .webscraping_rules import Click
 from .debug import write_debug_file
 from .debug import log
 
-async def scrape_all_job_sites(webscraping_config_path,max_days_since_job_posted):
-    found_jobs = {}
-    
+def load_scraping_rules():
     try:
+        webscraping_config_path = f"{globals.base_dir}/{globals.DEFAULT_WEB_SCRAPING_CONFIG_PATH}"
         with open(webscraping_config_path, "r", encoding="utf-8") as f:
             json_text = f.read()
-            config_data_model = WebScrapingRules.model_validate_json(json_text)
-            for config in config_data_model.root:
-                new_jobs: list
-                new_jobs = await scrape_job_site(config, max_days_since_job_posted)
-                for new_job in new_jobs:
-                    add_new_job(found_jobs, new_job)
-                                      
+            return WebScrapingRules.model_validate_json(json_text)                                      
     except json.JSONDecodeError as decode_err:
         log(f"[CRITICAL] '{webscraping_config_path}' contains invalid JSON syntax or typos! Check for missing commas or brackets. Error: {decode_err}")
         raise decode_err
+
+async def scrape_all_job_sites(scraping_rules_model:WebScrapingRules, max_days_since_job_posted):
+    found_jobs = {}
+    try:
+        for config in scraping_rules_model.root:
+            new_jobs: list
+            new_jobs = await scrape_job_site(config, max_days_since_job_posted)
+            for new_job in new_jobs:
+                add_new_job(found_jobs, new_job)                         
+    except Exception as e:
+        log(f"Error when scraping job sites. Error: {e}")
+        raise e
 
     log(f"\n[INFO] Aggregated {len(found_jobs)} deep job profiles.")
     return found_jobs

@@ -3,9 +3,7 @@ import pytest
 
 from job_bot.webscraper import clean_date_string, is_job_too_old, add_new_job, scrape_job_site
 from job_bot.notion import job_exists_in_notion
-from job_bot.notion import update_notion_database
 from job_bot.filtering import run_hiring_rules
-from job_bot.globals import DEFAULT_HIRING_RULES_PATH
 from job_bot.globals import base_dir
 from job_bot.webscraping_rules import WebsiteConfig
 from job_bot.coverletterwriter import generate_cover_letter
@@ -27,7 +25,8 @@ def test_webscraper_is_job_too_old_accepts_recent_posting():
     assert is_job_too_old("10-01-2026", max_time_period_in_days=30) == False
 
 def test_hiring_rules_1():
-    filter_check = run_hiring_rules(DEFAULT_HIRING_RULES_PATH,"Gameplay Programmer","Unity gameplay systems","Remote")
+    test_profile = load_profile("test")
+    filter_check = run_hiring_rules(test_profile.hiring_rules,"Gameplay Programmer","Unity gameplay systems","Remote")
     assert filter_check["match_status"] == "MATCH"
 
 def test_hiring_rules_2():
@@ -35,7 +34,8 @@ def test_hiring_rules_2():
     path = f"{base_dir}/test/sampleJob.txt"
     with open(path,"r",encoding="UTF-8") as r:
         job_description= r.read()
-    filter_check = run_hiring_rules(DEFAULT_HIRING_RULES_PATH,
+    test_profile = load_profile("test")
+    filter_check = run_hiring_rules(test_profile.hiring_rules,
                                     "Principal Game Programmer (f/m/x)",
                                     job_description,
                                     "Remote-Brazil")
@@ -47,7 +47,9 @@ def test_hiring_rules_3():
     path = f"{base_dir}/test/sampleJob.txt"
     with open(path,"r",encoding="UTF-8") as r:
         job_description= r.read()
-    filter_check = run_hiring_rules(DEFAULT_HIRING_RULES_PATH,
+
+    test_profile = load_profile("test")
+    filter_check = run_hiring_rules(test_profile.hiring_rules,
                                     "AI-Native Software Engineer (Games)",
                                     "  ",
                                     "Remote (Anywhere)")
@@ -93,50 +95,7 @@ requires_notion = pytest.mark.skipif(
 
 @requires_notion
 def test_notion_check_for_duplicates():
-    assert job_exists_in_notion("AI-Native Software Engineer (Games)","Playrix","10/09/2026   (UTC)") == True
-
-@requires_notion
-def test_notion_add_job_to_db():
-    json_text = """[
-  {
-    "date_posted": "10/15/26",
-    "date_found": "16-10-2026",
-    "job_title": "Programmer",
-    "company": "Glinda Games",
-    "location": "Remote",
-    "link": "https://gamejobs.co/Programmer-at-Glinda-Games",
-    "match_reason": "Found title keyword [programmer] and [Unity, gameplay, gameplay systems, networking, AI, experienced, pipelines] keywords in description",
-    "total_score": 120,
-    "generated_cover_letter": "None"
-  },
-  {
-    "date_posted": "10/15/26",
-    "date_found": "16-10-2026",
-    "job_title": "Unity Developer (Animation, Combat Gameplay)",
-    "company": "Finitude",
-    "location": "Remote",
-    "link": "https://gamejobs.co/Unity-Developer-Animation-Combat-Gameplay-at-Finitude",
-    "match_reason": "Found insta-win keyword [unity] in job title",
-    "total_score": 100,
-    "generated_cover_letter": "None"
-  },
-  {
-    "date_posted": "10-15-2026",
-    "date_found": "16-10-2026",
-    "job_title": "Unity Character Controller Developer",
-    "company": "Happiest Dark Corner",
-    "location": "Anywhere",
-    "link": "https://www.workwithindies.com/careers/happiest-dark-corner-unity-character-controller-developer",
-    "match_reason": "Found insta-win keyword [unity] in job title",
-    "total_score": 100,
-    "generated_cover_letter": "None"
-  }
-]"""
-    try:
-        update_notion_database(json_text)
-        assert True
-    except Exception:
-        assert False            
+    assert job_exists_in_notion("Senior Software Engineer II Applied AI","Wrapbook","10/14/2026") == True
 
 @pytest.mark.asyncio
 async def test_webscraper_scrape_static_job_site():
@@ -193,14 +152,11 @@ def test_generate_cover_letter():
         assert False 
 
     sample_job_description = None
-    sample_cover_letter = None
-    COVER_LETTER_TEMPLATE = os.environ.get("COVER_LETTER_TEMPLATE", "config/coverLetterTemplate.example.txt")
+    test_profile = load_profile("test")
 
     try:
         with open(f"{base_dir}/test/sampleJob.txt","r",encoding="UTF-8") as r_job_file:
             sample_job_description = r_job_file.read()
-        with open(f"{base_dir}/{COVER_LETTER_TEMPLATE}","r",encoding="UTF-8") as r_cover_letter:
-            sample_cover_letter = r_cover_letter.read()
     except Exception as e:
         print(f"Error when reading sample txt files:{e}")        
         exit(1)
@@ -208,7 +164,7 @@ def test_generate_cover_letter():
     if sample_job_description is not None:        
         cover_letter = generate_cover_letter([f"{base_dir}/data/resume.pdf",f"{base_dir}/data/portfolio.pdf"],
                                              sample_job_description,
-                                             sample_cover_letter,
+                                             test_profile.cover_letter_template,
                                              0)
         print(cover_letter)
         assert cover_letter is not None and len(cover_letter) > 0

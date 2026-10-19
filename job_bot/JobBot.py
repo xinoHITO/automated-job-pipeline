@@ -11,29 +11,35 @@ from . import globals
 from . import debug
 from . import filtering
 from . import notification
+from .profile import ProfileModel,load_profile
+from .webscraping_rules import WebScrapingRules
 
 from .debug import log
 
 # 4. MULTI-MODEL PIPELINE MASTER CONTROLLER
 async def main(days_since_job_posted: int,
-         write_cover_letter:bool, 
-         scraping_rules_path:str = globals.DEFAULT_WEB_SCRAPING_CONFIG_PATH, 
-         hiring_rules_path:str = globals.DEFAULT_HIRING_RULES_PATH,
-         send_notification:bool = False):
-    COVER_LETTER_TEMPLATE = os.environ.get("COVER_LETTER_TEMPLATE", f"config/coverLetterTemplate.example.txt")
-    CV_FILE = os.environ.get("CV_FILE", f"{globals.base_dir}/data/resume.pdf")
-    PORTFOLIO_FILE = os.environ.get("PORTFOLIO_FILE", f"{globals.base_dir}/data/portfolio.pdf")
-
+         profile_name:str,
+         write_cover_letter:bool,
+         send_notification:bool = False
+         ):
     temp_folder_path = f"{globals.base_dir}/temp/"
     os.makedirs(temp_folder_path,exist_ok=True)
 
     debug.clean_output_folder()
 
+    profile = None
+    try:
+        profile = load_profile(profile_name)
+    except Exception as e:
+        log(f"ERROR when loading profile:{profile_name}")
+    if profile is None:
+        raise Exception
+
     log("===== JOB BOT PIPELINE STARTING =====",True)
     log(f"max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")
-    log(f"scraping rules:{scraping_rules_path}")
-    
-    all_found_jobs = await webscraper.scrape_all_job_sites(f"{globals.base_dir}/{scraping_rules_path}",days_since_job_posted)
+    log(f"hiring_profile:{profile.name}")
+    scraping_rules = webscraper.load_scraping_rules()
+    all_found_jobs = await webscraper.scrape_all_job_sites(scraping_rules,days_since_job_posted)
     matched_results = []
     
     for idx, (key,job) in enumerate(all_found_jobs.items()):        
@@ -42,8 +48,9 @@ async def main(days_since_job_posted: int,
         # STEP 1: Fast Screening Pass (No cover letter generation)
         #log(f" └──> Running screening check using {FAST_FILTER_MODEL}...")
         #rules_cfg = filtering.load_scoring_rules()
-        #filter_check = filtering.run_quick_filter(FAST_FILTER_MODEL, job,rules_cfg)        
-        filter_check = filtering.run_hiring_rules(f"{globals.base_dir}/{hiring_rules_path}",job["title"],job["description"],job["location"])
+        #filter_check = filtering.run_quick_filter(FAST_FILTER_MODEL, job,rules_cfg)      
+         
+        filter_check = filtering.run_hiring_rules(profile.hiring_rules,job["title"],job["description"],job["location"])
         
         if filter_check["match_status"] == "MATCH":
             log(Fore.GREEN +f" └──> [PASSED] Score:{filter_check['total_score']} Reason: {filter_check['reason']} " +Style.RESET_ALL)
@@ -53,15 +60,9 @@ async def main(days_since_job_posted: int,
                 if write_cover_letter:
                     # STEP 2: Deep synthesis pass (Triggered only on confirmed match status)
                     log(f" └──> Writing cover letter synthesis...")
-                    try:
-                        with open(f"{globals.base_dir}/{COVER_LETTER_TEMPLATE}","r",encoding="UTF-8") as r_cover_letter:
-                            sample_cover_letter = r_cover_letter.read()
-                    except Exception as e:
-                        log(f"Error when reading sample txt files:{e}")        
-                        exit(1)
-                    cover_letter = coverletterwriter.generate_cover_letter([CV_FILE,PORTFOLIO_FILE],
+                    cover_letter = coverletterwriter.generate_cover_letter( profile.data_files,
                                                                             job['description'],
-                                                                            sample_cover_letter)
+                                                                            profile.cover_letter_template)
                     log(" └──> [SUCCESS] Tailored cover letter written and saved."+Style.RESET_ALL)
             except Exception as e:
                 log(f"{Fore.YELLOW}└──> [WARNING] Cover letter writer failed but job will be added{Style.RESET_ALL} - {e}")

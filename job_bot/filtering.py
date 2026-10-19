@@ -180,7 +180,7 @@ def run_quick_filter(model_name, job_item,rules_cfg):
         log(f"[ERROR] Quick filter fail: {e}")
         return {"match_status": "NO_MATCH", "reason": str(e)}
 
-def run_hiring_rules(hiring_rules_path,job_title:str,job_description:str,job_location:str):
+def run_hiring_rules(hiring_rules_model: HiringRulesModel,job_title:str,job_description:str,job_location:str):
     def is_keyword_in_text(text:str, keyword:str):
         if text is None:
             return False
@@ -195,19 +195,6 @@ def run_hiring_rules(hiring_rules_path,job_title:str,job_description:str,job_loc
             
         return False
     
-    
-    hiring_rules_model: HiringRulesModel = None
-    try:
-        with open(hiring_rules_path, "r") as r:
-            hiring_rules_model = HiringRulesModel.model_validate_json(r.read())
-
-    except Exception as write_err:
-        log(f"[ERROR] Could read hiring rules JSON file: {write_err}")
-    if not hiring_rules_model:
-        raise RuntimeError(
-                f"Error when reading hiring rules JSON file"
-            )
-
     title_instant_win_keywords = hiring_rules_model.title_instant_win_keywords
     title_target_keywords = hiring_rules_model.title_target_keywords
     title_exclude_keywords = hiring_rules_model.title_exclude_keywords
@@ -217,7 +204,6 @@ def run_hiring_rules(hiring_rules_path,job_title:str,job_description:str,job_loc
     require_remote = hiring_rules_model.require_remote
     insta_win_locations = hiring_rules_model.insta_win_locations
     
-
     #if the title contains the exclude words... bail out
     for exclude_keyword in title_exclude_keywords:
        if exclude_keyword.lower() in job_title.lower():

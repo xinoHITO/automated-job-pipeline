@@ -43,7 +43,7 @@ def load_profile(profile_name:str):
     cover_leter_template_path = f"{profiles_path}/{profile_name}/coverLetterTemplate.txt"
     cover_letter_template = None
     try:
-        with open(cover_leter_template_path, "r") as r:
+        with open(cover_leter_template_path,"r",encoding="UTF-8") as r:
             cover_letter_template = r.read()
         if cover_letter_template is None:
             raise Exception
@@ -52,8 +52,4 @@ def load_profile(profile_name:str):
         return None
     
     my_profile = ProfileModel(name=profile_name,hiring_rules=hiring_rules_model,cover_letter_template=cover_letter_template,data_files=files_array)
-    print (files_array)
     return my_profile
-
-if __name__ == "__main__":
-    load_profile("test")

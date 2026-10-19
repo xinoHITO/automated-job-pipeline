@@ -102,14 +102,11 @@ Next don't forget to fill in the values inside .env! Here's a list of what you n
 | `DATA_SOURCE_ID` | Notion data source ID |
 | `GEMINI_API_KEY` | Optional: Google Gemini API key (cover letters) |
 | `DISCORD_WEBHOOK_URL` | Optional: notifications on run completion |
-| `CV_FILE` | Path to your resume PDF (default: `data/resume.pdf`) |
-| `PORTFOLIO_FILE` | Path to your portfolio PDF (default: `data/portfolio.pdf`) |
-| `COVER_LETTER_TEMPLATE` | Cover letter template path (default: `config/coverLetterTemplate.example.txt`) |
 | `API_SECRET_TOKEN` | Shared secret for API auth — clients must send it as the `X-API-Key` header on `POST /run` (API mode only) |
 | `MAX_CONCURRENT_TICKETS` | Max pipeline runs processed at the same time (default: `2`) (API mode only)|
 | `SLEEP_AFTER_RUN` | For cron jobs (through `run_daily.sh`) set to `1` if you want the host to go to sleep after running the pipeline|
 
-> The PDFs in `data/` are **fictional samples** so the project runs out of the box. Point `CV_FILE`/`PORTFOLIO_FILE` at your own documents.
+> The PDFs in `data/` are **fictional samples** so the project runs out of the box. Fill the `data/` folder with your own documents (cvs,portfolios,etc)
 
 ### Run the pipeline
 
