@@ -16,7 +16,6 @@ from .webscraping_rules import WebScrapingRules
 
 from .debug import log
 
-# 4. MULTI-MODEL PIPELINE MASTER CONTROLLER
 async def main(days_since_job_posted: int,
          profile_name:str,
          write_cover_letter:bool,
@@ -27,7 +26,7 @@ async def main(days_since_job_posted: int,
 
     debug.clean_output_folder()
 
-    profile = None
+    profile:ProfileModel = None
     try:
         profile = load_profile(profile_name)
     except Exception as e:
@@ -38,11 +37,20 @@ async def main(days_since_job_posted: int,
     log("===== JOB BOT PIPELINE STARTING =====",True)
     log(f"max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")
     log(f"hiring_profile:{profile.name}")
-    scraping_rules = webscraper.load_scraping_rules()
-    all_found_jobs = await webscraper.scrape_all_job_sites(scraping_rules,days_since_job_posted)
+
+    all_found_jobs = None
+
+    # If the file exists, safely read and return it as a Python Dictionary
+    try:
+        with open(globals.SCRAPED_JOBS_PATH, "r", encoding="utf-8") as f:
+            all_found_jobs = json.load(f)
+    except json.JSONDecodeError as decode_err:
+        log(f"[CRITICAL] {globals.SCRAPED_JOBS_PATH} contains invalid JSON syntax or typos! Check for missing commas or brackets. Error: {decode_err}")
+        raise decode_err
+
     matched_results = []
     
-    for idx, (key,job) in enumerate(all_found_jobs.items()):        
+    for idx, (job) in enumerate(all_found_jobs):        
         log(f"\n[{idx+1}/{len(all_found_jobs)}] Processing: {job['title']}...")
         
         # STEP 1: Fast Screening Pass (No cover letter generation)
@@ -98,4 +106,21 @@ async def main(days_since_job_posted: int,
         notification.send_discord_notification(len(matched_results))
 
     return matched_results
+
+async def scrape(days_since_job_posted:int):
+    temp_folder_path = f"{globals.base_dir}/temp/"
+    os.makedirs(temp_folder_path,exist_ok=True)
+
+    debug.clean_output_folder()
+
+    log("===== JOB BOT SCRAPING PIPELINE STARTING =====",True)
+    scraping_rules = webscraper.load_scraping_rules()
+    all_found_jobs_dict = await webscraper.scrape_all_job_sites(scraping_rules,days_since_job_posted)
+    all_found_jobs = list(all_found_jobs_dict.values())
+    # Save output to project disk    
+    with open(globals.SCRAPED_JOBS_PATH, "w", encoding="utf-8") as f:
+        json.dump(all_found_jobs, f, indent=2, ensure_ascii=False)
+
+    log(f"\n===== SCRAPE COMPLETE =====\n Scraped {Fore.GREEN}{len(all_found_jobs_dict)}{Style.RESET_ALL} jobs to '{globals.SCRAPED_JOBS_PATH}'")
+
 

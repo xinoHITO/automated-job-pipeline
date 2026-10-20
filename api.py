@@ -34,7 +34,13 @@ concurrency_limiter = asyncio.Semaphore(MAX_CONCURRENT_TICKETS)
 # ── Schemas (documentación + validación automática en /docs) ──
 class RunRequest(BaseModel):
     max_days: int = 15
+    hiring_profile:str = "test"
     write_cover_letters: bool = False
+    profiling:bool = False
+    send_notification: bool = False
+
+class ScrapeRequest(BaseModel):
+    max_days: int = 15
     profiling:bool = False
     send_notification: bool = False
 
@@ -148,26 +154,41 @@ async def _run_pipeline(req: RunRequest, ticket_id:str):
             if req.profiling:
                 profiler.start_profiling()
                 try:
-                    result = await JobBot.main(req.max_days,req.write_cover_letters,send_notification=req.send_notification) or []
+                    result = await JobBot.main(req.max_days,req.hiring_profile,req.write_cover_letters,send_notification=req.send_notification) or []
                 finally:
                     profiler.end_profiling()
             else:
-                result = await JobBot.main(req.max_days,req.write_cover_letters,send_notification=req.send_notification)
+                result = await JobBot.main(req.max_days,req.hiring_profile,req.write_cover_letters,send_notification=req.send_notification)
             ticket_result = json.dumps(result, indent=2, ensure_ascii=False)
             update_ticket_status(ticket_id,"done",result=ticket_result)
 
         except Exception as e:
             update_ticket_status(ticket_id,"failed",result=str(e))
 
+            
+async def _scrape_pipeline(req: ScrapeRequest):
+    async with concurrency_limiter:
+        try:
+            if req.profiling:
+                profiler.start_profiling()
+                try:
+                    await JobBot.scrape(req.max_days)
+                finally:
+                    profiler.end_profiling()
+            else:
+                await JobBot.scrape(req.max_days)
+        except Exception as e:
+            print(f"Scraped failed - {e}")
+
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # ── Endpoints ──
-@app.post("/run", status_code=202)
+
+@app.post("/run", status_code=200)
 def run(run_config: RunRequest,
          background: BackgroundTasks, 
          request:Request,
          x_api_key: str = Security(api_key_header)):
-    #API_SECRET_TOKEN = os.environ.get("API_SECRET_TOKEN")
     if API_SECRET_TOKEN is None:
         raise HTTPException(
             status_code=403,
@@ -189,6 +210,26 @@ def run(run_config: RunRequest,
     poll_url = f"{base_url.rstrip('/')}/status?ticket_id={new_ticket_id}"
 
     return {"id":new_ticket_id,"status": "in queue","poll_url":poll_url}
+
+@app.post("/scrape", status_code=202)
+def scrape(scrape_config: ScrapeRequest,
+         background: BackgroundTasks, 
+         x_api_key: str = Security(api_key_header)):
+    if API_SECRET_TOKEN is None:
+        raise HTTPException(
+            status_code=403,
+            detail="API_SECRET_TOKEN not configured on server."
+        )
+    # Security check: Ensure the request contains the correct secret token header
+    if x_api_key is None or x_api_key != API_SECRET_TOKEN:
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized access attempt."
+        )
+    
+    background.add_task(_scrape_pipeline, scrape_config)
+  
+    return {"scrape started!"}
 
 @app.get("/status")
 def status(ticket_id:str):

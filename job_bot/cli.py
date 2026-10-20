@@ -5,13 +5,24 @@ from . import globals
 from . import profile
 app = typer.Typer(help="Config-driven job discovery pipeline")
 
+
 @app.command()
 def run(
     write_cover_letters: bool = typer.Option(False, "--write-cover","-w", help="Write cover letters for each job that passed screening"),    
     max_days: int = typer.Option(15,"--max-days","-d", help="Ignore postings older than N days"),
     hiring_profile: str = typer.Option("test","--profile","-p", help="Which profile to use a filter"),
-    profiling: bool = typer.Option(False,"--profiling","-e", help="Wether to profile the app"),
     send_notification: bool = typer.Option(False,"--notification","-n", help="Wether to send a discord notification when pipeline ends"),
+):
+    from . import JobBot
+    asyncio.run(
+        JobBot.main(max_days,hiring_profile,write_cover_letters,send_notification)
+    ) 
+
+@app.command()
+def scrape(    
+    max_days: int = typer.Option(15,"--max-days","-d", help="Ignore postings older than N days"),    
+    profiling: bool = typer.Option(False,"--profiling","-e", help="Wether to profile the app"),
+    send_notification: bool = typer.Option(False,"--notification","-n", help="Wether to send a discord notification when scraping ends"),
 ):
     from . import JobBot
     if profiling:
@@ -19,13 +30,13 @@ def run(
         profiler.start_profiling()
         try:
             asyncio.run(
-                JobBot.main(max_days,hiring_profile,write_cover_letters,send_notification)
+                JobBot.scrape(max_days)
             )
         finally:
             profiler.end_profiling()
     else:
         asyncio.run(
-            JobBot.main(max_days,hiring_profile,write_cover_letters,send_notification)
+            JobBot.scrape(max_days)
         )        
     
 @app.command()
