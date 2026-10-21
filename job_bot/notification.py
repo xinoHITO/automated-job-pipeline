@@ -41,8 +41,8 @@ def send_discord_notification(exported_jobs:int = 0):
             with open(archive_path, "rb") as f:
                 files = {
                     "file[0]": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log")),
-                    "file[1]": ("job_matches.json", open(f"{globals.base_dir}/output/job_matches.json")),
-                    "file[2]": (os.path.basename(archive_path), f)
+                    "file[1]": ("job_matches.json", open(f"{globals.base_dir}/output/job_matches.json"))
+                    #"file[2]": (os.path.basename(archive_path), f)
                 }
                 response = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files)
 
