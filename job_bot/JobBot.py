@@ -1,6 +1,7 @@
 import asyncio
 import os
 import json
+import uuid
 from colorama import Fore, Style
 from datetime import datetime
 
@@ -15,6 +16,9 @@ from .profile import ProfileModel,load_profile
 from .webscraping_rules import WebScrapingRules
 
 from .debug import log
+
+import sqlite3
+from .job_model import JobModel,Jobs
 
 async def main(days_since_job_posted: int,
          profile_name:str,
@@ -108,6 +112,8 @@ async def main(days_since_job_posted: int,
     return matched_results
 
 async def scrape(days_since_job_posted:int):
+    setup_job_table()
+
     temp_folder_path = f"{globals.base_dir}/temp/"
     os.makedirs(temp_folder_path,exist_ok=True)
 
@@ -118,11 +124,61 @@ async def scrape(days_since_job_posted:int):
 
     scraping_rules = webscraper.load_scraping_rules()
     all_found_jobs_dict = await webscraper.scrape_all_job_sites(scraping_rules,days_since_job_posted)
-    all_found_jobs = list(all_found_jobs_dict.values())
-    # Save output to project disk    
+    all_found_jobs:list[JobModel] = list(all_found_jobs_dict.values())
+    json_str = json.dumps([job.model_dump() for job in all_found_jobs],indent=2,ensure_ascii=False)
+    # Save output to project disk
     with open(globals.SCRAPED_JOBS_PATH, "w", encoding="utf-8") as f:
-        json.dump(all_found_jobs, f, indent=2, ensure_ascii=False)
+        f.write(json_str)
+        #json.dump(all_found_jobs, f, indent=2, ensure_ascii=False)
+
+    insert_jobs(all_found_jobs)
 
     log(f"\n===== SCRAPE COMPLETE =====\n Scraped {Fore.GREEN}{len(all_found_jobs_dict)}{Style.RESET_ALL} jobs to '{globals.SCRAPED_JOBS_PATH}'")
 
+def setup_job_table():
+    try:
+        conn = sqlite3.connect("tickets.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                url TEXT UNIQUE,
+                title TEXT NOT NULL,
+                company TEXT NOT NULL,
+                location TEXT,
+                date_posted DATE,
+                description TEXT,
+                scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
+        log(f"Job table created successfully")
+    except Exception as e:
+        log(f"Error when creating jobs table - {e}")
 
+def insert_jobs(new_jobs:list[JobModel]):
+    try:
+        conn = sqlite3.connect("tickets.db")
+        cursor = conn.cursor()
+        for new_job in new_jobs:
+            new_job_id = str(uuid.uuid4())
+            cursor.execute(f"""
+                            INSERT INTO jobs (id,url,title,company,location,date_posted,description) 
+                            VALUES (?,?,?,?,?,?,?)
+                            ON CONFLICT(url)
+                            DO UPDATE SET
+                                title=excluded.title, 
+                                company=excluded.company, 
+                                location=excluded.location, 
+                                date_posted=excluded.date_posted,
+                                description=excluded.description,
+                                scraped_at=CURRENT_TIMESTAMP;
+                            """
+                            ,(new_job_id ,new_job.url,new_job.title,new_job.company,new_job.location,new_job.date_posted,new_job.description)
+                            )
+        conn.commit()
+        conn.close()
+        log(f"Job table created successfully")
+    except Exception as e:
+        log(f"Error when inserting job - {e}")

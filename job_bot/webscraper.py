@@ -11,6 +11,8 @@ from datetime import datetime
 import time
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
+from .job_model import JobModel
+
 from . import notion as notion
 from . import globals
 from . import debug
@@ -38,7 +40,7 @@ async def scrape_all_job_sites(scraping_rules_model:WebScrapingRules, max_days_s
             new_jobs: list
             new_jobs = await scrape_job_site(config, max_days_since_job_posted)
             for new_job in new_jobs:
-                add_new_job(found_jobs, new_job)                         
+                add_new_job(found_jobs, new_job)
     except Exception as e:
         log(f"Error when scraping job sites. Error: {e}")
         raise e
@@ -53,10 +55,10 @@ async def scrape_job_site(config, max_days_since_job_posted, check_duplicates_in
         new_jobs = __scrape_static_site(config,max_days_since_job_posted,check_duplicates_in_notion)
     return new_jobs
 
-def add_new_job(jobs_dict:dict,the_new_job):
-        title = the_new_job["title"].lower().strip()
-        company = the_new_job["company"].lower().strip()
-        posted_date = the_new_job["date_posted"].lower().strip()
+def add_new_job(jobs_dict:dict,the_new_job:JobModel):
+        title = the_new_job.title.lower().strip()
+        company = the_new_job.company.lower().strip()
+        posted_date = the_new_job.date_posted.lower().strip()
         job_post_date = clean_date_string(posted_date)
         date_object = dateparser.parse(job_post_date)
         jobs_dict.setdefault((title,company,date_object),the_new_job)
@@ -203,6 +205,9 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                 except Exception as inner_err:
                     log(f"                  └─> [WARN] Could not dive into details for {link} - {inner_err}")
                 write_debug_file(f"description{job_title}_{job_company}.txt",full_description)
+                new_job = JobModel(url=link,title=job_title,company=job_company,location=job_location,date_posted=job_post_date,description=full_description)
+                jobs.append(new_job)
+                """
                 jobs.append({
                     "title": job_title,
                     "company": job_company,
@@ -211,6 +216,7 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                     "date_posted":job_post_date,                
                     "description": full_description,                
                 })
+                """
                 log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Deep Crawling Position Detail:{Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location} | description:{full_description[:100]}")
                 write_debug_file(f"jobOutput_{job_title}_{job_company}.txt",str(jobs[len(jobs)-1]))
             
@@ -435,11 +441,11 @@ async def playwright_parse_html(    context:BrowserContext,
                                                         check_duplicates_in_notion
                                                     )
         if parsed_job is not None:
-            job_posted_date = parsed_job.get("date_posted",None)
-            title = parsed_job["title"]
-            studio = parsed_job["company"]
-            location = parsed_job["location"]
-            description = parsed_job["description"]
+            job_posted_date = parsed_job.date_posted
+            title = parsed_job.title
+            studio = parsed_job.company
+            location = parsed_job.location
+            description = parsed_job.description
             if description is None:
                 description = "None"
             if job_posted_date is not None:
@@ -552,7 +558,8 @@ async def playwright_parse_job_card(    context:BrowserContext,
         if is_duplicated:
             log(f"[{index+1}/{job_cards_count}]  └─> Already exists in database... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {location}")
             return None
-
+        parsed_job = JobModel(url=job_url,title=title,company=studio,location=location,date_posted=job_posted_date,description=description)
+        """
         parsed_job = {
             "title": title,
             "company": studio,
@@ -561,6 +568,7 @@ async def playwright_parse_job_card(    context:BrowserContext,
             "date_posted":job_posted_date,                
             "description": description,
         }
+        """
         return parsed_job
     except Exception as e:
         log(f"Unknown Error when parsing job card - {e}")        

@@ -39,11 +39,6 @@ class RunRequest(BaseModel):
     profiling:bool = False
     send_notification: bool = False
 
-class ScrapeRequest(BaseModel):
-    max_days: int = 15
-    profiling:bool = False
-    send_notification: bool = False
-
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     conn = sqlite3.connect("tickets.db")
@@ -119,7 +114,7 @@ async def run_pending_tickets():
     conn = sqlite3.connect("tickets.db")
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE tickets SET status = 'in queue' WHERE status = 'running' OR status = 'failed'")
+        cursor.execute("UPDATE tickets SET status = 'in queue' WHERE status = 'running'")
         print(f"Rows marked for queue: {cursor.rowcount}")
 
         cursor.execute("SELECT id,params FROM tickets WHERE status = 'in queue'")
@@ -165,21 +160,6 @@ async def _run_pipeline(req: RunRequest, ticket_id:str):
         except Exception as e:
             update_ticket_status(ticket_id,"failed",result=str(e))
 
-            
-async def _scrape_pipeline(req: ScrapeRequest):
-    async with concurrency_limiter:
-        try:
-            if req.profiling:
-                profiler.start_profiling()
-                try:
-                    await JobBot.scrape(req.max_days)
-                finally:
-                    profiler.end_profiling()
-            else:
-                await JobBot.scrape(req.max_days)
-        except Exception as e:
-            print(f"Scraped failed - {e}")
-
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # ── Endpoints ──
@@ -210,26 +190,6 @@ def run(run_config: RunRequest,
     poll_url = f"{base_url.rstrip('/')}/status?ticket_id={new_ticket_id}"
 
     return {"id":new_ticket_id,"status": "in queue","poll_url":poll_url}
-
-@app.post("/scrape", status_code=202)
-def scrape(scrape_config: ScrapeRequest,
-         background: BackgroundTasks, 
-         x_api_key: str = Security(api_key_header)):
-    if API_SECRET_TOKEN is None:
-        raise HTTPException(
-            status_code=403,
-            detail="API_SECRET_TOKEN not configured on server."
-        )
-    # Security check: Ensure the request contains the correct secret token header
-    if x_api_key is None or x_api_key != API_SECRET_TOKEN:
-        raise HTTPException(
-            status_code=403,
-            detail="Unauthorized access attempt."
-        )
-    
-    background.add_task(_scrape_pipeline, scrape_config)
-  
-    return {"scrape started!"}
 
 @app.get("/status")
 def status(ticket_id:str):

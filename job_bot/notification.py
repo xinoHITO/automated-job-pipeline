@@ -36,7 +36,6 @@ def send_discord_notification(exported_jobs:int = 0):
                 "content": message_content
             }
 
-
             # Open the zip file and send it via multipart form request
             with open(archive_path, "rb") as f:
                 files = {

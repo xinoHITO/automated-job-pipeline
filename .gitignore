@@ -44,3 +44,4 @@ Thumbs.db
 *.slnx
 *.code-workspace
 tickets.db
+job_bot/sql_queries/
