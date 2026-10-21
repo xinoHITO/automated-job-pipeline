@@ -42,7 +42,7 @@ def write_debug_file(file_name,content, debug=False):
     except Exception as e:
         print(f"[WARN] Could not write debug text files: {e}")
 
-async def take_playwright_screenshot(page:Page, screenshot_file_name:str, image_extension:str =".png"):
+async def take_playwright_screenshot(page:Page, screenshot_file_name:str, image_extension:str =".jpg"):
     if not os.path.exists(OUTPUT_FOLDER_PATH):
         os.makedirs(OUTPUT_FOLDER_PATH,exist_ok=True)
         

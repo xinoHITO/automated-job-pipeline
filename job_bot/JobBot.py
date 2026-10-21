@@ -114,6 +114,8 @@ async def scrape(days_since_job_posted:int):
     debug.clean_output_folder()
 
     log("===== JOB BOT SCRAPING PIPELINE STARTING =====",True)
+    log(f"max_days:{days_since_job_posted}")
+
     scraping_rules = webscraper.load_scraping_rules()
     all_found_jobs_dict = await webscraper.scrape_all_job_sites(scraping_rules,days_since_job_posted)
     all_found_jobs = list(all_found_jobs_dict.values())
