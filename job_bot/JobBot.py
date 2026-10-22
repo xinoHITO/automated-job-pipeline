@@ -13,12 +13,11 @@ from . import debug
 from . import filtering
 from . import notification
 from .profile import ProfileModel,load_profile
-from .webscraping_rules import WebScrapingRules
 
 from .debug import log
 
 import sqlite3
-from .job_model import JobModel,Jobs
+from .job_model import JobModel
 
 async def main(days_since_job_posted: int,
          profile_name:str,
@@ -129,8 +128,6 @@ async def scrape(days_since_job_posted:int):
     # Save output to project disk
     with open(globals.SCRAPED_JOBS_PATH, "w", encoding="utf-8") as f:
         f.write(json_str)
-        #json.dump(all_found_jobs, f, indent=2, ensure_ascii=False)
-
     insert_jobs(all_found_jobs)
 
     log(f"\n===== SCRAPE COMPLETE =====\n Scraped {Fore.GREEN}{len(all_found_jobs_dict)}{Style.RESET_ALL} jobs to '{globals.SCRAPED_JOBS_PATH}'")
@@ -164,8 +161,8 @@ def insert_jobs(new_jobs:list[JobModel]):
         for new_job in new_jobs:
             new_job_id = str(uuid.uuid4())
             cursor.execute(f"""
-                            INSERT INTO jobs (id,url,title,company,location,date_posted,description) 
-                            VALUES (?,?,?,?,?,?,?)
+                            INSERT INTO jobs (id,url,source_site,title,company,location,date_posted,description) 
+                            VALUES (?,?,?,?,?,?,?,?)
                             ON CONFLICT(url)
                             DO UPDATE SET
                                 title=excluded.title, 
@@ -175,7 +172,7 @@ def insert_jobs(new_jobs:list[JobModel]):
                                 description=excluded.description,
                                 scraped_at=CURRENT_TIMESTAMP;
                             """
-                            ,(new_job_id ,new_job.url,new_job.title,new_job.company,new_job.location,new_job.date_posted,new_job.description)
+                            ,(new_job_id ,new_job.url,new_job.source_site,new_job.title,new_job.company,new_job.location,new_job.date_posted,new_job.description)
                             )
         conn.commit()
         conn.close()

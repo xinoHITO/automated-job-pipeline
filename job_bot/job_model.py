@@ -4,6 +4,7 @@ from pydantic import BaseModel, RootModel
 
 class JobModel(BaseModel):    
     url:str
+    source_site:str
     title:str
     company:str
     location:Optional[str]

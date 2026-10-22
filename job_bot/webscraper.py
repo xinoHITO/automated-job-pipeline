@@ -205,7 +205,7 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                 except Exception as inner_err:
                     log(f"                  └─> [WARN] Could not dive into details for {link} - {inner_err}")
                 write_debug_file(f"description{job_title}_{job_company}.txt",full_description)
-                new_job = JobModel(url=link,title=job_title,company=job_company,location=job_location,date_posted=job_post_date,description=full_description)
+                new_job = JobModel(url=link,source_site=config_model.site_name,title=job_title,company=job_company,location=job_location,date_posted=job_post_date,description=full_description)
                 jobs.append(new_job)
                 """
                 jobs.append({
@@ -558,7 +558,7 @@ async def playwright_parse_job_card(    context:BrowserContext,
         if is_duplicated:
             log(f"[{index+1}/{job_cards_count}]  └─> Already exists in database... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {location}")
             return None
-        parsed_job = JobModel(url=job_url,title=title,company=studio,location=location,date_posted=job_posted_date,description=description)
+        parsed_job = JobModel(url=job_url,source_site=config_model.site_name,title=title,company=studio,location=location,date_posted=job_posted_date,description=description)
         """
         parsed_job = {
             "title": title,
