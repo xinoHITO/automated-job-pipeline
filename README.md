@@ -74,7 +74,11 @@ flowchart LR
 
 ## Quickstart
 
-Requires **Python 3.11+**.
+Requires **Python 3.14+**.
+
+```cmd
+winget install Python.Python.3 #installs Python on Windows 
+```
 
 ```bash
 git clone https://github.com/xinoHITO/automated-job-pipeline.git
