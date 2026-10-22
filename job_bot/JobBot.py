@@ -140,6 +140,7 @@ def setup_job_table():
             CREATE TABLE IF NOT EXISTS jobs (
                 id TEXT PRIMARY KEY,
                 url TEXT UNIQUE,
+                source_site TEXT ,
                 title TEXT NOT NULL,
                 company TEXT NOT NULL,
                 location TEXT,

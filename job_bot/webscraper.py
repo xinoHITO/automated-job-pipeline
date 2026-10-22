@@ -61,7 +61,14 @@ def add_new_job(jobs_dict:dict,the_new_job:JobModel):
         posted_date = the_new_job.date_posted.lower().strip()
         job_post_date = clean_date_string(posted_date)
         date_object = dateparser.parse(job_post_date)
-        jobs_dict.setdefault((title,company,date_object),the_new_job)
+
+        job_key = (title,company,date_object)
+        if job_key in jobs_dict:
+            job:JobModel = jobs_dict.get(job_key)
+            if (job.description is None or len(job.description.strip()) == 0) and (the_new_job.description is not None and len(the_new_job.description.strip()) == 0):
+                jobs_dict[job_key] = the_new_job
+        else:
+            jobs_dict[job_key] = the_new_job        
 
 def log_retry(retry_state):
     error = retry_state.outcome.exception()
