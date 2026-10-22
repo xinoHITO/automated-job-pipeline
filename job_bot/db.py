@@ -8,9 +8,11 @@ from .job_model import JobModel
 import dateparser
 from colorama import Fore, Style
 
+DATABASE_NAME = "tickets.db"
+
 def create_job_table():
     try:
-        conn = sqlite3.connect("tickets.db")
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS jobs (
@@ -34,7 +36,7 @@ def create_job_table():
 def get_jobs(limit_date:datetime):
     all_jobs:list[JobModel] = []
     try:
-        conn = sqlite3.connect("tickets.db")
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
         cursor.execute("""
             SELECT url,title,company,location,date_posted,description from jobs WHERE DATE(date_posted) >= DATE(?);
@@ -54,7 +56,7 @@ def get_jobs(limit_date:datetime):
 
 def insert_jobs(new_jobs:list[JobModel]):
     try:
-        conn = sqlite3.connect("tickets.db")
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
         for new_job in new_jobs:
             new_job_id = str(uuid.uuid4())
