@@ -72,19 +72,32 @@ flowchart LR
 
 ---
 
-## Quickstart
-
-Requires **Python 3.14+**.
-
-```cmd
-winget install Python.Python.3 #installs Python on Windows 
+## Pre-requisites
+This repo requires **Python 3.14+**. 
+### Install python on Windows
+Run this from cmd
+```bash
+winget install Python.Python.3
 ```
+### Install python on Mac
+Run this from Terminal
+```bash
+brew install python
+```
+
+### Install python on Linux
+```bash
+sudo apt update
+sudo apt install python3 python3-pip -y
+```
+## Quickstart
+Once you have Python installed run this:
 
 ```bash
 git clone https://github.com/xinoHITO/automated-job-pipeline.git
 cd automated-job-pipeline
 python -m venv .venv 
-source .venv/bin/activate   # On Windows: .\.venv\Scripts\activate.bat
+.\.venv\Scripts\activate.bat    # On Mac/Linux:  source .venv/bin/activate
 pip install -r requirements.txt
 playwright install chromium
 ```
