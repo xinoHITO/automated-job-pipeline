@@ -13,15 +13,19 @@ class ProfileModel(BaseModel):
     cover_letter_template: str
     data_files: List[str]
 
-def load_profile(profile_name:str):
-    profiles_path = f"{globals.base_dir}/profiles"
-    if not os.path.exists(profiles_path):
-        os.makedirs(profiles_path,exist_ok=True)
+    def get_profile_folder_path(self):
+        return f"{PROFILES_PATH}/{self.name}"
 
-    if not os.path.exists(profiles_path):
+PROFILES_PATH = f"{globals.base_dir}/profiles"
+
+def load_profile(profile_name:str):
+    if not os.path.exists(PROFILES_PATH):
+        os.makedirs(PROFILES_PATH,exist_ok=True)
+
+    if not os.path.exists(PROFILES_PATH):
         return None
 
-    hiring_rules_path = f"{profiles_path}/{profile_name}/hiring_rules.json"
+    hiring_rules_path = f"{PROFILES_PATH}/{profile_name}/hiring_rules.json"
     hiring_rules_model: HiringRulesModel = None
     files_array = []
     try:
@@ -31,7 +35,7 @@ def load_profile(profile_name:str):
         log(f"[ERROR] Could read hiring rules JSON file: {e}")
         return None   
 
-    data_files_path = Path(f"{profiles_path}/{profile_name}/data")
+    data_files_path = Path(f"{PROFILES_PATH}/{profile_name}/data")
     try:
         files_array = [str(file) for file in data_files_path.iterdir() if file.is_file()]
         if files_array is None or len(files_array) == 0:
@@ -40,7 +44,7 @@ def load_profile(profile_name:str):
         log(f"[ERROR] No files in data folder: {e}")
         return None
 
-    cover_leter_template_path = f"{profiles_path}/{profile_name}/coverLetterTemplate.txt"
+    cover_leter_template_path = f"{PROFILES_PATH}/{profile_name}/coverLetterTemplate.txt"
     cover_letter_template = None
     try:
         with open(cover_leter_template_path,"r",encoding="UTF-8") as r:

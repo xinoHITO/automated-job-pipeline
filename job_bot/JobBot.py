@@ -3,7 +3,9 @@ import os
 import json
 import uuid
 from colorama import Fore, Style
-from datetime import datetime
+from datetime import datetime, timedelta
+
+import dateparser
 
 from . import notion as notion
 from . import webscraper as webscraper
@@ -38,41 +40,44 @@ async def main(days_since_job_posted: int,
         raise Exception
 
     log("===== JOB BOT PIPELINE STARTING =====",True)
-    log(f"max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")
-    log(f"hiring_profile:{profile.name}")
+    log(f"hiring_profile:{profile.name} | max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")    
 
     all_found_jobs = None
 
     # If the file exists, safely read and return it as a Python Dictionary
+    """
     try:
         with open(globals.SCRAPED_JOBS_PATH, "r", encoding="utf-8") as f:
             all_found_jobs = json.load(f)
     except json.JSONDecodeError as decode_err:
         log(f"[CRITICAL] {globals.SCRAPED_JOBS_PATH} contains invalid JSON syntax or typos! Check for missing commas or brackets. Error: {decode_err}")
         raise decode_err
-
+    """
+    limit_date =  datetime.now() - timedelta(days=days_since_job_posted)
+    all_found_jobs = get_jobs(limit_date=limit_date)
+    
     matched_results = []
     
-    for idx, (job) in enumerate(all_found_jobs):        
-        log(f"\n[{idx+1}/{len(all_found_jobs)}] Processing: {job['title']}...")
+    for idx, (job) in enumerate(all_found_jobs):
+        log(f"\n[{idx+1}/{len(all_found_jobs)}] Processing: {job.title}...")
         
         # STEP 1: Fast Screening Pass (No cover letter generation)
         #log(f" └──> Running screening check using {FAST_FILTER_MODEL}...")
         #rules_cfg = filtering.load_scoring_rules()
         #filter_check = filtering.run_quick_filter(FAST_FILTER_MODEL, job,rules_cfg)      
          
-        filter_check = filtering.run_hiring_rules(profile.hiring_rules,job["title"],job["description"],job["location"])
+        filter_check = filtering.run_hiring_rules(profile.hiring_rules,job.title,job.description,job.location)
         
         if filter_check["match_status"] == "MATCH":
             log(Fore.GREEN +f" └──> [PASSED] Score:{filter_check['total_score']} Reason: {filter_check['reason']} " +Style.RESET_ALL)
-            log(f" └──> Url:{job['link']}")
+            log(f" └──> Url:{job.url}")
             cover_letter = "None"
             try:
                 if write_cover_letter:
                     # STEP 2: Deep synthesis pass (Triggered only on confirmed match status)
                     log(f" └──> Writing cover letter synthesis...")
                     cover_letter = coverletterwriter.generate_cover_letter( profile.data_files,
-                                                                            job['description'],
+                                                                            job.description,
                                                                             profile.cover_letter_template)
                     log(" └──> [SUCCESS] Tailored cover letter written and saved."+Style.RESET_ALL)
             except Exception as e:
@@ -80,25 +85,24 @@ async def main(days_since_job_posted: int,
                 cover_letter = "None"
             
             matched_results.append({
-                "date_posted": job['date_posted'],
+                "date_posted": job.date_posted,
                 "date_found": datetime.now().strftime("%d-%m-%Y"),
-                "job_title": job['title'],
-                "company": job['company'],
-                "location": job['location'],
-                "link": job['link'],
+                "job_title": job.title,
+                "company": job.company,
+                "location": job.location,
+                "link": job.url,
                 "match_reason": filter_check['reason'],                
                 "total_score": filter_check['total_score'],
                 "generated_cover_letter": cover_letter
             })
         else:
             log(Fore.RED + f" └──> [REJECTED] Score:{filter_check['total_score']} Reason: {filter_check['reason']}"+Style.RESET_ALL)
-            log(f" └──> Url:{job['link']}")
+            log(f" └──> Url:{job.url}")
 
         await asyncio.sleep(0.1)
 
-
-    # Save output to project disk    
-    output_filename = f"{debug.OUTPUT_FOLDER_PATH}/job_matches.json"
+    # Save output to project disk        
+    output_filename = f"{profile.get_profile_folder_path()}/job_matches.json"
     with open(output_filename, "w", encoding="utf-8") as f:
         json.dump(matched_results, f, indent=2, ensure_ascii=False)
 
@@ -140,7 +144,7 @@ def setup_job_table():
             CREATE TABLE IF NOT EXISTS jobs (
                 id TEXT PRIMARY KEY,
                 url TEXT UNIQUE,
-                source_site TEXT ,
+                source_site TEXT,
                 title TEXT NOT NULL,
                 company TEXT NOT NULL,
                 location TEXT,
@@ -155,27 +159,55 @@ def setup_job_table():
     except Exception as e:
         log(f"Error when creating jobs table - {e}")
 
+def get_jobs(limit_date:datetime):
+    all_jobs:list[JobModel] = []
+    try:
+        conn = sqlite3.connect("tickets.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT url,title,company,location,date_posted,description from jobs WHERE DATE(date_posted) >= DATE(?);
+        """,(limit_date,))
+        for row in cursor:
+            url,title,company,location,date_posted,description = row
+            job = JobModel(url=url,title=title,company=company,location=location,date_posted=date_posted,description=description)
+            all_jobs.append(job)
+
+        conn.commit()
+        conn.close()
+        log(f"Job table created successfully")
+    except Exception as e:
+        log(f"Error getting jobs table - {e}")
+
+    return all_jobs
+
 def insert_jobs(new_jobs:list[JobModel]):
     try:
         conn = sqlite3.connect("tickets.db")
         cursor = conn.cursor()
         for new_job in new_jobs:
             new_job_id = str(uuid.uuid4())
-            cursor.execute(f"""
-                            INSERT INTO jobs (id,url,source_site,title,company,location,date_posted,description) 
-                            VALUES (?,?,?,?,?,?,?,?)
-                            ON CONFLICT(url)
-                            DO UPDATE SET
-                                title=excluded.title, 
-                                company=excluded.company, 
-                                source_site=excluded.source_site,
-                                location=excluded.location, 
-                                date_posted=excluded.date_posted,
-                                description=excluded.description,
-                                scraped_at=CURRENT_TIMESTAMP;
-                            """
-                            ,(new_job_id ,new_job.url,new_job.source_site,new_job.title,new_job.company,new_job.location,new_job.date_posted,new_job.description)
-                            )
+            standarized_date = None
+            try:
+                date_obj = dateparser.parse(new_job.date_posted)
+                standarized_date = date_obj.strftime('%Y-%m-%d')
+                cursor.execute(f"""
+                                            INSERT INTO jobs (id,url,source_site,title,company,location,date_posted,description) 
+                                            VALUES (?,?,?,?,?,?,?,?)
+                                            ON CONFLICT(url)
+                                            DO UPDATE SET
+                                                title=excluded.title, 
+                                                company=excluded.company, 
+                                                source_site=excluded.source_site,
+                                                location=excluded.location, 
+                                                date_posted=excluded.date_posted,
+                                                description=excluded.description,
+                                                scraped_at=CURRENT_TIMESTAMP;
+                                            """
+                                            ,(new_job_id ,new_job.url,new_job.source_site,new_job.title,new_job.company,new_job.location,standarized_date,new_job.description)
+                                            )
+            except Exception as e:
+                log(f"Error when inserting job in DB - invalid date in job | {Fore.CYAN}{new_job.company}{Style.RESET_ALL} | {Fore.YELLOW}{new_job.title}{Style.RESET_ALL}  | {new_job.date_posted} - {Fore.RED}{e}{Style.RESET_ALL}")
+            
         conn.commit()
         conn.close()
         log(f"Job table created successfully")
