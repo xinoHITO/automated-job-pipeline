@@ -168,6 +168,7 @@ def insert_jobs(new_jobs:list[JobModel]):
                             DO UPDATE SET
                                 title=excluded.title, 
                                 company=excluded.company, 
+                                source_site=excluded.source_site,
                                 location=excluded.location, 
                                 date_posted=excluded.date_posted,
                                 description=excluded.description,

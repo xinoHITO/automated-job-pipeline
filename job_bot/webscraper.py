@@ -65,7 +65,10 @@ def add_new_job(jobs_dict:dict,the_new_job:JobModel):
         job_key = (title,company,date_object)
         if job_key in jobs_dict:
             job:JobModel = jobs_dict.get(job_key)
-            if (job.description is None or len(job.description.strip()) == 0) and (the_new_job.description is not None and len(the_new_job.description.strip()) == 0):
+            if (
+                (job.description is None or len(job.description.strip()) == 0) and
+                (the_new_job.description is not None and len(the_new_job.description.strip()) == 0)
+                ):
                 jobs_dict[job_key] = the_new_job
         else:
             jobs_dict[job_key] = the_new_job        
