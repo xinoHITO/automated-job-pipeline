@@ -187,23 +187,26 @@ def run(run_config: RunRequest,
     # Get the base domain dynamically (e.g., "http://127.0.0.1:8080")
     base_url = str(request.base_url)     
     # Strip any trailing slash and build the full status path cleanly
-    poll_url = f"{base_url.rstrip('/')}/status?ticket_id={new_ticket_id}"
+    poll_url = f"{base_url.rstrip('/')}/jobs?ticket_id={new_ticket_id}"
 
     return {"id":new_ticket_id,"status": "in queue","poll_url":poll_url}
 
-@app.get("/status")
-def status(ticket_id:str):
-    ticket = get_ticket(ticket_id)
-
-    if ticket is None:
-        raise HTTPException(status_code=404, detail="Ticket not found")
-
-    return {"id:":ticket_id, "status":ticket["status"], "result":ticket["result"]}
+@app.get("/health")
+def health():
+    return "server is ok"
 
 @app.get("/jobs")
 def jobs(ticket_id:str, min_score: int = 0):
     """Last pipeline results, optionally filtered by score."""
     ticket = get_ticket(ticket_id)
-    result = json.loads(ticket["result"])
-    filtered = [j for j in result if int(j.get("total_score", 0)) >= min_score]
-    return {"count": len(filtered), "jobs": filtered}
+    
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    status = ticket["status"]
+    if status != "done":
+        return {"id:":ticket_id, "status":ticket["status"], "result":ticket["result"]}
+    else:
+        result = json.loads(ticket["result"])
+        filtered = [j for j in result if int(j.get("total_score", 0)) >= min_score]
+        return {"count": len(filtered), "jobs": filtered}   
