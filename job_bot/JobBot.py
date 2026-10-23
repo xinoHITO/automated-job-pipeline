@@ -37,19 +37,7 @@ async def main(days_since_job_posted: int,
     log("===== JOB BOT PIPELINE STARTING =====",True)
     log(f"hiring_profile:{profile.name} | max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")    
 
-    all_found_jobs = None
-
-    # If the file exists, safely read and return it as a Python Dictionary
-    """
-    try:
-        with open(globals.SCRAPED_JOBS_PATH, "r", encoding="utf-8") as f:
-            all_found_jobs = json.load(f)
-    except json.JSONDecodeError as decode_err:
-        log(f"[CRITICAL] {globals.SCRAPED_JOBS_PATH} contains invalid JSON syntax or typos! Check for missing commas or brackets. Error: {decode_err}")
-        raise decode_err
-    """
-    limit_date =  datetime.now() - timedelta(days=days_since_job_posted)
-    all_found_jobs = get_jobs(limit_date=limit_date)
+    all_found_jobs = get_jobs(days_since_job_posted)
     
     matched_results = []
     

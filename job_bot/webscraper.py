@@ -23,6 +23,9 @@ from .webscraping_rules import Click
 from .debug import write_debug_file
 from .debug import log
 
+from .import db
+
+
 def load_scraping_rules():
     try:
         webscraping_config_path = f"{globals.base_dir}/{globals.DEFAULT_WEB_SCRAPING_CONFIG_PATH}"
@@ -181,7 +184,8 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                     log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]   └─> Already exists in database with duplicated URL... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
                     continue
 
-                is_duplicated = notion.job_exists_in_notion(job_title,job_company,job_post_date) if check_duplicates_in_notion else False
+                is_duplicated = db.job_exists_in_db(job_title,job_company,job_post_date,max_days_since_job_posted)
+                #is_duplicated = notion.job_exists_in_notion(job_title,job_company,job_post_date) if check_duplicates_in_notion else False
                 if is_duplicated:
                     log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Already exists in database with same title,studio and posted_date... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
                     continue
@@ -410,7 +414,7 @@ async def __scrape_playwright(  config_model:WebsiteConfig,
 async def playwright_parse_html(    context:BrowserContext,
                                     page:Page,
                                     config_model:WebsiteConfig,
-                                    max_days_since_job_posted,
+                                    max_days_since_job_posted:int,
                                     job_cards_count:int,
                                     url:str,
                                     check_duplicates_in_notion:bool = True
@@ -448,6 +452,7 @@ async def playwright_parse_html(    context:BrowserContext,
                                                         job_cards_count,
                                                         index,
                                                         config_model,
+                                                        max_days_since_job_posted,
                                                         check_duplicates_in_notion
                                                     )
         if parsed_job is not None:
@@ -479,6 +484,7 @@ async def playwright_parse_job_card(    context:BrowserContext,
                                         job_cards_count:int,
                                         index:int,
                                         config_model:WebsiteConfig,
+                                        max_days_since_job_posted:int,
                                         check_duplicates_in_notion:bool = True
                                         ):
     detail_page:Page = None
@@ -564,7 +570,8 @@ async def playwright_parse_job_card(    context:BrowserContext,
             log(f"[{index+1}/{job_cards_count}] Invalid date couldn't parse:\"{posted_date}\" in {Fore.CYAN}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {job_posted_date} | {location} - {e}")
             job_posted_date = ""
 
-        is_duplicated = notion.job_exists_in_notion(title,studio,job_posted_date)
+        is_duplicated = db.job_exists_in_db(title,studio,job_posted_date,max_days_since_job_posted)
+        #is_duplicated = notion.job_exists_in_notion(title,studio,job_posted_date)
         if is_duplicated:
             log(f"[{index+1}/{job_cards_count}]  └─> Already exists in database... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{studio}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{title}{Style.RESET_ALL} | {location}")
             return None

@@ -9,6 +9,7 @@ import dateparser
 from colorama import Fore, Style
 
 DATABASE_NAME = "tickets.db"
+DB_JOB_CACHE: dict = {}
 
 def create_job_table():
     try:
@@ -33,7 +34,8 @@ def create_job_table():
     except Exception as e:
         log(f"Error when creating jobs table - {e}")
 
-def get_jobs(limit_date:datetime):
+def get_jobs(days_since_job_posted:int = 30):    
+    limit_date =  datetime.now() - timedelta(days=days_since_job_posted)
     all_jobs:list[JobModel] = []
     try:
         conn = sqlite3.connect(DATABASE_NAME)
@@ -54,6 +56,29 @@ def get_jobs(limit_date:datetime):
 
     return all_jobs
 
+def __update_cache(max_days_since_posted:int = 15):
+    jobs = get_jobs(max_days_since_posted)
+    log(f"Generating DB_JOB_CACHE max_days:{max_days_since_posted}")    
+    DB_JOB_CACHE.clear()
+    for job in jobs:
+        key = (job.title,job.company,job.date_posted)
+        DB_JOB_CACHE[key] = job
+    log("DB_JOB_CACHE generated!")
+
+def job_exists_in_db(job_title:str, company:str, date_posted:str, max_days_since_posted:int = 15):
+    if DB_JOB_CACHE is None:
+        __update_cache(max_days_since_posted)
+    date = standarize_date(date_posted)
+    key_to_check = (job_title,company,date)
+    
+    result = DB_JOB_CACHE.get(key_to_check,None)
+    if result is not None:
+        log(f"{Fore.RED}DUPLICATE FOUND IN DB! - title:{job_title} | company:{company} | date_posted:{date}{Style.RESET_ALL}")
+    else:
+        log(f"{Fore.GREEN}No duplicate found in DB - title:{job_title} | company:{company} | date_posted:{date}{Style.RESET_ALL}")
+    return result is not None
+
+
 def insert_jobs(new_jobs:list[JobModel]):
     try:
         conn = sqlite3.connect(DATABASE_NAME)
@@ -61,9 +86,8 @@ def insert_jobs(new_jobs:list[JobModel]):
         for new_job in new_jobs:
             new_job_id = str(uuid.uuid4())
             standarized_date = None
-            try:
-                date_obj = dateparser.parse(new_job.date_posted)
-                standarized_date = date_obj.strftime('%Y-%m-%d')
+            try:                
+                standarized_date = standarize_date(new_job.date_posted)
                 cursor.execute(f"""
                                             INSERT INTO jobs (id,url,source_site,title,company,location,date_posted,description) 
                                             VALUES (?,?,?,?,?,?,?,?)
@@ -87,3 +111,8 @@ def insert_jobs(new_jobs:list[JobModel]):
         log(f"Job table created successfully")
     except Exception as e:
         log(f"Error when inserting job - {e}")
+
+def standarize_date(date_text:str):
+    date_obj = dateparser.parse(date_text)
+    standarized_date = date_obj.strftime('%Y-%m-%d')
+    return standarized_date
