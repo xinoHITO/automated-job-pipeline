@@ -19,7 +19,7 @@ def run(
     ) 
 
 @app.command()
-def scrape(    
+def scrape(
     max_days: int = typer.Option(15,"--max-days","-d", help="Ignore postings older than N days"),    
     profiling: bool = typer.Option(False,"--profiling","-e", help="Wether to profile the app"),
     send_notification: bool = typer.Option(False,"--notification","-n", help="Wether to send a discord notification when scraping ends"),
@@ -38,7 +38,36 @@ def scrape(
         asyncio.run(
             JobBot.scrape(max_days,send_notification)
         )        
+
+@app.command()
+def scrape_and_run(
+    write_cover_letters: bool = typer.Option(False, "--write-cover","-w", help="Write cover letters for each job that passed screening"),    
+    max_days: int = typer.Option(15,"--max-days","-d", help="Ignore postings older than N days"),
+    profiling: bool = typer.Option(False,"--profiling","-e", help="Wether to profile the app"),
+    hiring_profile: str = typer.Option("test","--profile","-p", help="Which profile to use a filter"),
+    send_notification: bool = typer.Option(False,"--notification","-n", help="Wether to send a discord notification when pipeline ends"),
+):
+    async def scrape_and_run():
+        from . import JobBot
+        await JobBot.scrape(max_days,send_notification)
+        await JobBot.main(max_days,hiring_profile,write_cover_letters,send_notification)
+
+    if profiling:
+        from . import profiler
+        profiler.start_profiling()
+        try:
+            asyncio.run(
+                scrape_and_run()
+            )
+        finally:
+            profiler.end_profiling()
+    else:
+        asyncio.run(
+            scrape_and_run()
+        )    
     
+    
+
 @app.command()
 def serve(
     host: str = typer.Option("127.0.0.1", "--host"),

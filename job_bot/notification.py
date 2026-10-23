@@ -17,15 +17,15 @@ def send_profile_run_notification(hiring_profile:HiringProfileModel, exported_jo
     if DISCORD_WEBHOOK_URL is None:
         return
 
-    output_folder= "output"
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
+    profile_folder = hiring_profile.get_profile_folder_path()
     try:
         # Check if the folder exists and actually contains files
-        if os.path.exists(output_folder) and os.listdir(output_folder):
+        if os.path.exists(profile_folder) and os.listdir(profile_folder):
             
             # Define the text message payload (equivalent to the -F "content=...")
             message_content = (
-                f"🚀 **Profile Run Finished Successfully!**\n"
+                f"🚀 **Profile {hiring_profile.name} Run Finished Successfully!**\n"
                 f"📅 Timestamp: `{timestamp}`\n"
                 f"💼 Found {exported_jobs} jobs | Profile:{hiring_profile.name}\n"
                 f"📁 Attached below is today's execution log.\n"
@@ -35,26 +35,26 @@ def send_profile_run_notification(hiring_profile:HiringProfileModel, exported_jo
                 "content": message_content
             }
 
-            profile_folder = hiring_profile.get_profile_folder_path()
             files = {
-                "file[0]": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log")),
+                "file[0]": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log","rb")),
                 "file[1]": ("job_matches.json", open(f"{profile_folder}/job_matches.json"))
             }
             response = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files)
+            # Check if it was successful
+            if response.status_code in (200, 204):
+                log("Webhook and file sent successfully!")
+            else:
+                log(f"Failed to send webhook: {response.status_code} - {response.text}")
+            
         else:
             # Fallback if the folder is missing or empty
-            fallback_msg = f"⚠️ **Scraper Run Finished at {timestamp}, but the logs folder was empty or missing!**"
+            fallback_msg = f"⚠️ **Profile [{hiring_profile.name}] Run Finished at {timestamp}, but the logs folder was empty or missing!**"
             requests.post(DISCORD_WEBHOOK_URL, json={"content": fallback_msg})
             log("Logs folder was empty or missing. Sent warning message instead.")
     except Exception as e:
         log(f"Failed to send webhook for profile run - {Fore.RED}{e}{Style.RESET_ALL}")
 
-    # Check if it was successful
-    if response.status_code in (200, 204):
-        log("Webhook and file sent successfully!")
-    else:
-        log(f"Failed to send webhook: {response.status_code} - {response.text}")
-
+   
 
 def send_scrape_notification(exported_jobs:int = 0):
     DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
@@ -82,15 +82,16 @@ def send_scrape_notification(exported_jobs:int = 0):
             data = {
                 "content": message_content
             }
-
             # Open the zip file and send it via multipart form request
             with open(archive_path, "rb") as f:
                 files = {
-                    "file[0]": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log")),
-                    #"file[2]": (os.path.basename(archive_path), f)
+                    "file": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log","rb"))
                 }
                 response = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files)
-
+                if response.status_code in (200, 204):
+                    log("Webhook and file sent successfully!")
+                else:
+                    log(f"Failed to send webhook: {response.status_code} - {response.text}")
 
         else:
             # Fallback if the folder is missing or empty
@@ -104,8 +105,4 @@ def send_scrape_notification(exported_jobs:int = 0):
         if archive_path and os.path.exists(archive_path):
             os.remove(archive_path)
 
-    # Check if it was successful
-    if response.status_code in (200, 204):
-        log("Webhook and file sent successfully!")
-    else:
-        log(f"Failed to send webhook: {response.status_code} - {response.text}")
+    
