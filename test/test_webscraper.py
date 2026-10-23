@@ -7,7 +7,7 @@ from job_bot.filtering import run_hiring_rules
 from job_bot.globals import base_dir
 from job_bot.webscraping_rules import WebsiteConfig
 from job_bot.coverletterwriter import generate_cover_letter
-from job_bot.profile import load_profile
+from job_bot.hiring_profile import load_profile
 
 def test_profile_model():
     result = load_profile("test")

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from . import globals
 from .debug import log
-from .profile import HiringProfileModel
+from .hiring_profile import HiringProfileModel
 
 load_dotenv()
 

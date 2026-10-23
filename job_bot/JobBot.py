@@ -11,7 +11,7 @@ from . import globals
 from . import debug
 from . import filtering
 from . import notification
-from .profile import HiringProfileModel,load_profile
+from .hiring_profile import HiringProfileModel,load_profile
 from .debug import log
 from .job_model import JobModel
 from .db import create_job_table, get_jobs, insert_jobs

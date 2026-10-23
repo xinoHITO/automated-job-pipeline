@@ -2,7 +2,7 @@ import asyncio
 
 import typer
 from . import globals
-from . import profile
+from . import hiring_profile
 app = typer.Typer(help="Config-driven job discovery pipeline")
 
 
