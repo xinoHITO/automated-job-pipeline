@@ -75,10 +75,6 @@ def job_exists_in_db(job_title:str, company:str, date_posted:str, max_days_since
     key_to_check = (job_title,company,date)
     
     result = DB_JOB_CACHE.get(key_to_check,None)
-    if result is not None:
-        log(f"{Fore.RED}DUPLICATE FOUND IN DB!{Style.RESET_ALL} - title:{job_title} | company:{company} | date_posted:{date}{Style.RESET_ALL}")
-    else:
-        log(f"{Fore.GREEN}No duplicate found in DB{Style.RESET_ALL} - {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {Fore.CYAN}{company}{Style.RESET_ALL} | {date}")
     return result is not None
 
 def job_url_exists_in_db(url:str, max_days_since_posted:int = 15):
@@ -86,10 +82,6 @@ def job_url_exists_in_db(url:str, max_days_since_posted:int = 15):
         __update_cache(max_days_since_posted)
     
     result = DB_JOB_URL_CACHE.get(url,None)
-    if result is not None:
-        log(f"{Fore.RED}URL DUPLICATE FOUND IN DB!{Style.RESET_ALL} - url:{Fore.MAGENTA}{url}{Style.RESET_ALL}")
-    else:
-        log(f"{Fore.GREEN}No URL duplicate found in DB{Style.RESET_ALL} - url:{Fore.MAGENTA}{url}{Style.RESET_ALL}")
     return result is not None
 
 
