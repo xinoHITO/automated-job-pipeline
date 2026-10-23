@@ -10,6 +10,7 @@ from colorama import Fore, Style
 
 DATABASE_NAME = "tickets.db"
 DB_JOB_CACHE: dict = {}
+DB_JOB_URL_CACHE: dict = {}
 
 def create_job_table():
     try:
@@ -60,10 +61,12 @@ def __update_cache(max_days_since_posted:int = 15):
     jobs = get_jobs(max_days_since_posted)
     log(f"Generating DB_JOB_CACHE max_days:{max_days_since_posted}")    
     DB_JOB_CACHE.clear()
+    DB_JOB_URL_CACHE.clear()
     for job in jobs:
         key = (job.title,job.company,job.date_posted)
         DB_JOB_CACHE[key] = job
-    log("DB_JOB_CACHE generated!")
+        DB_JOB_URL_CACHE[job.url] = job
+    log("Database JOB_CACHE and URL_CACHE generated!")
 
 def job_exists_in_db(job_title:str, company:str, date_posted:str, max_days_since_posted:int = 15):
     if len(DB_JOB_CACHE.keys()) == 0:
@@ -73,9 +76,20 @@ def job_exists_in_db(job_title:str, company:str, date_posted:str, max_days_since
     
     result = DB_JOB_CACHE.get(key_to_check,None)
     if result is not None:
-        log(f"{Fore.RED}DUPLICATE FOUND IN DB! - title:{job_title} | company:{company} | date_posted:{date}{Style.RESET_ALL}")
+        log(f"{Fore.RED}DUPLICATE FOUND IN DB!{Style.RESET_ALL} - title:{job_title} | company:{company} | date_posted:{date}{Style.RESET_ALL}")
     else:
-        log(f"{Fore.GREEN}No duplicate found in DB - title:{job_title} | company:{company} | date_posted:{date}{Style.RESET_ALL}")
+        log(f"{Fore.GREEN}No duplicate found in DB{Style.RESET_ALL} - {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {Fore.CYAN}{company}{Style.RESET_ALL} | {date}")
+    return result is not None
+
+def job_url_exists_in_db(url:str, max_days_since_posted:int = 15):
+    if len(DB_JOB_URL_CACHE.keys()) == 0:
+        __update_cache(max_days_since_posted)
+    
+    result = DB_JOB_URL_CACHE.get(url,None)
+    if result is not None:
+        log(f"{Fore.RED}URL DUPLICATE FOUND IN DB!{Style.RESET_ALL} - url:{Fore.MAGENTA}{url}{Style.RESET_ALL}")
+    else:
+        log(f"{Fore.GREEN}No URL duplicate found in DB{Style.RESET_ALL} - url:{Fore.MAGENTA}{url}{Style.RESET_ALL}")
     return result is not None
 
 
@@ -114,5 +128,7 @@ def insert_jobs(new_jobs:list[JobModel]):
 
 def standarize_date(date_text:str):
     date_obj = dateparser.parse(date_text)
-    standarized_date = date_obj.strftime('%Y-%m-%d')
+    standarized_date = None
+    if date_obj:
+        standarized_date = date_obj.strftime('%Y-%m-%d')
     return standarized_date
