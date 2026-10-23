@@ -66,7 +66,7 @@ def __update_cache(max_days_since_posted:int = 15):
     log("DB_JOB_CACHE generated!")
 
 def job_exists_in_db(job_title:str, company:str, date_posted:str, max_days_since_posted:int = 15):
-    if DB_JOB_CACHE is None:
+    if len(DB_JOB_CACHE.keys()) == 0:
         __update_cache(max_days_since_posted)
     date = standarize_date(date_posted)
     key_to_check = (job_title,company,date)
