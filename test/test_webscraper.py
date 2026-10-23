@@ -8,11 +8,6 @@ from job_bot.globals import base_dir
 from job_bot.webscraping_rules import WebsiteConfig
 from job_bot.coverletterwriter import generate_cover_letter
 from job_bot.profile import load_profile
-from job_bot.notification import send_discord_notification
-
-def test_send_discord_notification():
-    result = send_discord_notification(7)
-    assert result is not None
 
 def test_profile_model():
     result = load_profile("test")

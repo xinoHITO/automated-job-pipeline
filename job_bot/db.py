@@ -51,7 +51,6 @@ def get_jobs(days_since_job_posted:int = 30):
 
         conn.commit()
         conn.close()
-        log(f"Job table created successfully")
     except Exception as e:
         log(f"Error getting jobs table - {e}")
 

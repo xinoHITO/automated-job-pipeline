@@ -7,9 +7,11 @@ from dotenv import load_dotenv
 
 from . import globals
 from .debug import log
+from .profile import ProfileModel
+
 load_dotenv()
 
-def send_discord_notification(exported_jobs:int = 0):
+def send_discord_notification(hiring_profile:ProfileModel, exported_jobs:int = 0):
     DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
     if DISCORD_WEBHOOK_URL is None:
         return
@@ -36,11 +38,12 @@ def send_discord_notification(exported_jobs:int = 0):
                 "content": message_content
             }
 
+            profile_folder = hiring_profile.get_profile_folder_path()
             # Open the zip file and send it via multipart form request
             with open(archive_path, "rb") as f:
                 files = {
                     "file[0]": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log")),
-                    "file[1]": ("job_matches.json", open(f"{globals.base_dir}/output/job_matches.json"))
+                    "file[1]": ("job_matches.json", open(f"{profile_folder}/job_matches.json"))
                     #"file[2]": (os.path.basename(archive_path), f)
                 }
                 response = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files)

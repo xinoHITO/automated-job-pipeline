@@ -2,7 +2,7 @@ import asyncio
 import os
 import json
 from colorama import Fore, Style
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from . import notion as notion
 from . import webscraper as webscraper
@@ -93,7 +93,7 @@ async def main(days_since_job_posted: int,
     log(f"\n===== RUN COMPLETE =====\n Saved {len(matched_results)} matches to '{output_filename}'")
 
     if send_notification:
-        notification.send_discord_notification(len(matched_results))
+        notification.send_discord_notification(profile, len(matched_results))
 
     return matched_results
 
