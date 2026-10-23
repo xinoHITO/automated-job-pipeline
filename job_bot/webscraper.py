@@ -187,11 +187,6 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                     log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]   └─> Already exists in database with duplicated URL... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
                     continue
 
-                is_duplicated = db.job_exists_in_db(job_title,job_company,job_post_date,max_days_since_job_posted)
-                if is_duplicated:
-                    log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Already exists in database with same title,studio and posted_date... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
-                    continue
-
                 # --- DEEP SCRAPING STEP ---
                 full_description = "No extended details parsed."
                 try:
@@ -224,18 +219,14 @@ def __scrape_static_site(  config_model:WebsiteConfig,
                 except Exception as inner_err:
                     log(f"                  └─> [WARN] Could not dive into details for {link} - {inner_err}")
                 write_debug_file(f"description{job_title}_{job_company}.txt",full_description)
+
+                is_duplicated = db.job_exists_in_db(job_title,job_company,job_post_date,max_days_since_job_posted)
+                if is_duplicated:
+                    log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Already exists in database with same title,studio and posted_date... {Fore.RED}skipping job:{Style.RESET_ALL} {Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location}")
+                    continue
+
                 new_job = JobModel(url=link,source_site=config_model.site_name,title=job_title,company=job_company,location=job_location,date_posted=job_post_date,description=full_description)
                 jobs.append(new_job)
-                """
-                jobs.append({
-                    "title": job_title,
-                    "company": job_company,
-                    "link": link,
-                    "location": job_location,                
-                    "date_posted":job_post_date,                
-                    "description": full_description,                
-                })
-                """
                 log(f"{Fore.GREEN}[Page {page_index}]{Style.RESET_ALL} [{index+1}/{cards_length}]  └─> Deep Crawling Position Detail:{Fore.LIGHTCYAN_EX}{job_company}{Style.RESET_ALL} is hiring a {Fore.YELLOW}{job_title}{Style.RESET_ALL} | {dmy_formatted_date} | {job_location} | description:{full_description[:100]}")
                 write_debug_file(f"jobOutput_{job_title}_{job_company}.txt",str(jobs[len(jobs)-1]))
             
