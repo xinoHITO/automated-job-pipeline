@@ -207,7 +207,7 @@ def run_hiring_rules(hiring_rules_model: HiringRulesModel,job_title:str,job_desc
     #if the title contains the exclude words... bail out
     for exclude_keyword in title_exclude_keywords:
        if exclude_keyword.lower() in job_title.lower():
-              return {"match_status": "NO MATCH", "reason": f"Job title contains \"{exclude_keyword}\" exclude keyword", "total_score":0}            
+              return {"match_status": "NO MATCH", "reason": f"Job title contains [{exclude_keyword}] exclude keyword", "total_score":0}            
 
     #if insta-win location is found then we skip the rest of location check
     if not any(insta_win_location.lower().strip() in job_location.lower().strip() for insta_win_location in insta_win_locations):
@@ -224,17 +224,17 @@ def run_hiring_rules(hiring_rules_model: HiringRulesModel,job_title:str,job_desc
             if job_location.lower().strip() == "remote":
                 locations.append("remote")
             if not any(location.lower().strip() in job_location.lower().strip() for location in locations):
-                return {"match_status": "NO MATCH", "reason": f"Job location \"{job_location}\" is not appropiate", "total_score":0}
+                return {"match_status": "NO MATCH", "reason": f"Job location [{job_location}] is not appropiate", "total_score":0}
         else:
             if require_remote:
-                return {"match_status": "NO MATCH", "reason": f"Job is not remote", "total_score":0}
+                return {"match_status": "NO MATCH", "reason": f"Job location [{job_location}] is not remote", "total_score":0}
             else:
-                return {"match_status": "NO MATCH", "reason": f"Job is remote and we're looking for on-site", "total_score":0}
+                return {"match_status": "NO MATCH", "reason": f"Job location [{job_location}] is remote and we're looking for on-site", "total_score":0}
        
     #insta-win in title just find one and go
     for target_keyword in title_instant_win_keywords:
         if target_keyword.lower() in job_title.lower():    
-            return {"match_status": "MATCH", "reason": f"Found insta-win keyword \"{target_keyword}\" in job title", "total_score":100}            
+            return {"match_status": "MATCH", "reason": f"Found insta-win keyword [{target_keyword}] in job title", "total_score":100}            
 
     if job_description is not None and len(job_description.strip()) > 0:
         #title_target_keyword - if insta-win title keywords are not in the title then check for regular target title keywords. If they are then check for description keywords
@@ -254,12 +254,12 @@ def run_hiring_rules(hiring_rules_model: HiringRulesModel,job_title:str,job_desc
                                 break                
                     final_score += score_delta
                 if final_score >= required_job_score:
-                    return {"match_status": "MATCH", "reason": f"Found title keyword \"{title_target_keyword}\" and [{", ".join(matched_keywords)}] keywords in description", "total_score":final_score}
+                    return {"match_status": "MATCH", "reason": f"Found title keyword [{title_target_keyword}] and [{", ".join(matched_keywords)}] keywords in description", "total_score":final_score}
                 else:
-                    return {"match_status": "NO MATCH", "reason": f"Not enough score. Found title keyword \"{title_target_keyword}\" and [{", ".join(matched_keywords)}] keywords in description", "total_score":final_score}
+                    return {"match_status": "NO MATCH", "reason": f"Not enough score. Found title keyword [{title_target_keyword}] and [{", ".join(matched_keywords)}] keywords in description", "total_score":final_score}
     else:
         for title_target_keyword in title_target_keywords:
             if title_target_keyword.lower().strip() in job_title.lower().strip():
-                return {"match_status": "MATCH", "reason": f"Found title keyword \"{title_target_keyword}\". No description provided", "total_score":required_job_score}
+                return {"match_status": "MATCH", "reason": f"Found title keyword [{title_target_keyword}]. No description provided", "total_score":required_job_score}
     
     return {"match_status": "NO MATCH", "reason": "Couldn't find any target keywords in title nor description", "total_score":0}
