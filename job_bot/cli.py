@@ -30,13 +30,13 @@ def scrape(
         profiler.start_profiling()
         try:
             asyncio.run(
-                JobBot.scrape(max_days)
+                JobBot.scrape(max_days,send_notification)
             )
         finally:
             profiler.end_profiling()
     else:
         asyncio.run(
-            JobBot.scrape(max_days)
+            JobBot.scrape(max_days,send_notification)
         )        
     
 @app.command()

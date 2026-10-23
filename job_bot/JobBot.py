@@ -93,11 +93,11 @@ async def main(days_since_job_posted: int,
     log(f"\n===== RUN COMPLETE =====\n Saved {len(matched_results)} matches to '{output_filename}'")
 
     if send_notification:
-        notification.send_discord_notification(profile, len(matched_results))
+        notification.send_profile_run_notification(profile, len(matched_results))
 
     return matched_results
 
-async def scrape(days_since_job_posted:int):
+async def scrape(days_since_job_posted:int, send_notification:bool = False):
     create_job_table()
 
     temp_folder_path = f"{globals.base_dir}/temp/"
@@ -118,3 +118,6 @@ async def scrape(days_since_job_posted:int):
     insert_jobs(all_found_jobs)
 
     log(f"\n===== SCRAPE COMPLETE =====\n Scraped {Fore.GREEN}{len(all_found_jobs_dict)}{Style.RESET_ALL} jobs to '{globals.SCRAPED_JOBS_PATH}'")
+
+    if send_notification:
+        notification.send_scrape_notification(len(all_found_jobs))
