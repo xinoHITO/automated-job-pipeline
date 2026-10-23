@@ -7,7 +7,7 @@ from . import globals
 from .hiring_rules import HiringRulesModel
 from .debug import log
 
-class ProfileModel(BaseModel):
+class HiringProfileModel(BaseModel):
     name:str
     hiring_rules: HiringRulesModel
     cover_letter_template: str
@@ -55,5 +55,5 @@ def load_profile(profile_name:str):
         log(f"[ERROR] Could read cover letter template: {e}")
         return None
     
-    my_profile = ProfileModel(name=profile_name,hiring_rules=hiring_rules_model,cover_letter_template=cover_letter_template,data_files=files_array)
+    my_profile = HiringProfileModel(name=profile_name,hiring_rules=hiring_rules_model,cover_letter_template=cover_letter_template,data_files=files_array)
     return my_profile

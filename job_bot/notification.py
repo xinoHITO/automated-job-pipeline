@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 
 from . import globals
 from .debug import log
-from .profile import ProfileModel
+from .profile import HiringProfileModel
 
 load_dotenv()
 
-def send_discord_notification(hiring_profile:ProfileModel, exported_jobs:int = 0):
+def send_discord_notification(hiring_profile:HiringProfileModel, exported_jobs:int = 0):
     DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
     if DISCORD_WEBHOOK_URL is None:
         return

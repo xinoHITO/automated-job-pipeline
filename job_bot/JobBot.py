@@ -11,7 +11,7 @@ from . import globals
 from . import debug
 from . import filtering
 from . import notification
-from .profile import ProfileModel,load_profile
+from .profile import HiringProfileModel,load_profile
 from .debug import log
 from .job_model import JobModel
 from .db import create_job_table, get_jobs, insert_jobs
@@ -26,7 +26,7 @@ async def main(days_since_job_posted: int,
 
     debug.clean_output_folder()
 
-    profile:ProfileModel = None
+    profile:HiringProfileModel = None
     try:
         profile = load_profile(profile_name)
     except Exception as e:
