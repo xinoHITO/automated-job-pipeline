@@ -1,6 +1,7 @@
 
+from pydoc import text
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import uuid
 
 from .debug import log
@@ -8,9 +9,54 @@ from .job_model import JobModel
 import dateparser
 from colorama import Fore, Style
 
-DATABASE_NAME = "tickets.db"
-DB_JOB_CACHE: dict = {}
-DB_JOB_URL_CACHE: dict = {}
+DATABASE_NAME = "db/scraped_jobs.db"
+dedup_index: DedupIndex = None
+
+class DedupIndex:
+    def __init__(self,urls:set[str],keys:set[tuple]):
+        self.urls = urls
+        self.keys = keys
+
+    def url_exists(self, url) -> bool: 
+        return url in self.urls
+    
+    def job_exists(self,title:str,company:str,post_date:datetime) -> bool:
+        key = (title.lower().strip(),company.lower().strip(),post_date)
+        if post_date is None:
+            return False
+        return key in self.keys
+
+    def add(self, job:JobModel):
+        self.urls.add(job.url)
+        date_obj = dateparser.parse(standarize_date(job.date_posted))
+        key = (job.title,job.company,date_obj)
+        if job.date_posted is not None:
+            self.keys.add(key)
+
+def _load_dedup_index(max_days: int):
+    global dedup_index
+
+    log(f"Generating dedup_index max_days:{max_days}")    
+
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    rows = cursor.execute("""
+        SELECT url, title, company, date_posted
+        FROM jobs WHERE date_posted >= ?;
+        """, (date.today() - timedelta(days=max_days),))
+    urls:set[str] = set()
+    keys:set[tuple] = set()
+    for row in rows:
+        url,title,company,date_posted = row
+        if url:
+            urls.add(url)
+        if title and company and date_posted:
+            date_obj = dateparser.parse(date_posted)
+            key = (title.lower().strip(),company.lower().strip(),date_obj)
+            keys.add(key)
+    dedup_index = DedupIndex(urls,keys)
+    log("Database dedup_index generated!")
+
 
 def create_job_table():
     try:
@@ -56,33 +102,18 @@ def get_jobs(days_since_job_posted:int = 30):
 
     return all_jobs
 
-def __update_cache(max_days_since_posted:int = 15):
-    jobs = get_jobs(max_days_since_posted)
-    log(f"Generating DB_JOB_CACHE max_days:{max_days_since_posted}")    
-    DB_JOB_CACHE.clear()
-    DB_JOB_URL_CACHE.clear()
-    for job in jobs:
-        key = (job.title,job.company,job.date_posted)
-        DB_JOB_CACHE[key] = job
-        DB_JOB_URL_CACHE[job.url] = job
-    log("Database JOB_CACHE and URL_CACHE generated!")
-
 def job_exists_in_db(job_title:str, company:str, date_posted:str, max_days_since_posted:int = 15):
-    if len(DB_JOB_CACHE.keys()) == 0:
-        __update_cache(max_days_since_posted)
+    if dedup_index is None:
+        _load_dedup_index(max_days_since_posted)
     date = standarize_date(date_posted)
-    key_to_check = (job_title,company,date)
-    
-    result = DB_JOB_CACHE.get(key_to_check,None)
-    return result is not None
+    date_obj = dateparser.parse(date)
+    return dedup_index.job_exists(job_title,company ,date_obj)    
 
 def job_url_exists_in_db(url:str, max_days_since_posted:int = 15):
-    if len(DB_JOB_URL_CACHE.keys()) == 0:
-        __update_cache(max_days_since_posted)
+    if dedup_index is None:
+        _load_dedup_index(max_days_since_posted)
     
-    result = DB_JOB_URL_CACHE.get(url,None)
-    return result is not None
-
+    return dedup_index.url_exists(url)
 
 def insert_jobs(new_jobs:list[JobModel]):
     try:

@@ -30,12 +30,13 @@ def clean_output_folder():
     os.makedirs(OUTPUT_FOLDER_PATH,exist_ok=True)
 
 def write_debug_file(file_name,content, debug=False):
-    if not os.path.exists(OUTPUT_FOLDER_PATH):
-        os.makedirs(OUTPUT_FOLDER_PATH,exist_ok=True)
+    debug_folder_path = f"{OUTPUT_FOLDER_PATH}/debug/"
+    if not os.path.exists(debug_folder_path):
+        os.makedirs(debug_folder_path,exist_ok=True)
     
     try:
         cleaned_file_name = clean_file_name(file_name)
-        with open(f"{OUTPUT_FOLDER_PATH}/{cleaned_file_name}","w",encoding="UTF-8") as w:
+        with open(f"{debug_folder_path}/{cleaned_file_name}","w",encoding="UTF-8") as w:
             w.write(content)
         if debug:
             print(f" -> Successfully wrote '{cleaned_file_name}'")
@@ -43,11 +44,12 @@ def write_debug_file(file_name,content, debug=False):
         print(f"[WARN] Could not write debug text files: {e}")
 
 async def take_playwright_screenshot(page:Page, screenshot_file_name:str, image_extension:str =".jpg"):
-    if not os.path.exists(OUTPUT_FOLDER_PATH):
-        os.makedirs(OUTPUT_FOLDER_PATH,exist_ok=True)
+    debug_folder_path = f"{OUTPUT_FOLDER_PATH}/debug/"
+    if not os.path.exists(debug_folder_path):
+        os.makedirs(debug_folder_path,exist_ok=True)
         
     file_name = clean_file_name(f"{screenshot_file_name}{image_extension}")
-    screenshot_path = f"{OUTPUT_FOLDER_PATH}/{file_name}"
+    screenshot_path = f"{debug_folder_path}/{file_name}"
     await page.screenshot(path=screenshot_path)
 
 def clean_file_name(file_name):

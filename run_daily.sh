@@ -64,7 +64,10 @@ docker build -t playwright-scraper:latest .
 echo "🚀 Starting container..."
 docker stop my-running-container || true
 docker rm my-running-container || true
-docker run --rm --env-file .env -v "$(pwd)"/scraper_logs:/app/output playwright-scraper:latest
+docker run --rm --env-file .env \
+    -v "$(pwd)"/scraper_logs:/app/output \
+    -v "$(pwd)"/scraper_db:/app/db \
+    playwright-scraper:latest 
 
 echo "🎉 Docker container built and deployed successfully!"
 

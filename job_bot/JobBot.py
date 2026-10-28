@@ -14,7 +14,8 @@ from . import notification
 from .hiring_profile import HiringProfileModel,load_profile
 from .debug import log
 from .job_model import JobModel
-from .db import create_job_table, get_jobs, insert_jobs
+#from .db import create_job_table, get_jobs, insert_jobs
+from . import db
 
 async def main(days_since_job_posted: int,
          profile_name:str,
@@ -37,7 +38,7 @@ async def main(days_since_job_posted: int,
     log("===== JOB BOT PIPELINE STARTING =====",True)
     log(f"hiring_profile:{profile.name} | max_days:{days_since_job_posted} | write_cover_letter:{write_cover_letter}")    
 
-    all_found_jobs = get_jobs(days_since_job_posted)
+    all_found_jobs = db.get_jobs(days_since_job_posted)
     
     matched_results = []
     
@@ -98,7 +99,7 @@ async def main(days_since_job_posted: int,
     return matched_results
 
 async def scrape(days_since_job_posted:int, send_notification:bool = False):
-    create_job_table()
+    db.create_job_table()
 
     temp_folder_path = f"{globals.base_dir}/temp/"
     os.makedirs(temp_folder_path,exist_ok=True)
@@ -115,7 +116,7 @@ async def scrape(days_since_job_posted:int, send_notification:bool = False):
     # Save output to project disk
     with open(globals.SCRAPED_JOBS_PATH, "w", encoding="utf-8") as f:
         f.write(json_str)
-    insert_jobs(all_found_jobs)
+    db.insert_jobs(all_found_jobs)
 
     log(f"\n===== SCRAPE COMPLETE =====\n Scraped {Fore.GREEN}{len(all_found_jobs_dict)}{Style.RESET_ALL} jobs to '{globals.SCRAPED_JOBS_PATH}'")
 

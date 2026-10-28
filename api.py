@@ -1,7 +1,6 @@
 import os
 import asyncio
 import json
-# api.py — Job Pipeline as a service
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Security
 from fastapi.security import APIKeyHeader
 import secrets
