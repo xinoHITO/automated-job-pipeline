@@ -99,12 +99,12 @@ async def main(days_since_job_posted: int,
     return matched_results
 
 async def scrape(days_since_job_posted:int, send_notification:bool = False):
+    debug.clean_output_folder()
+
     db.create_job_table()
 
     temp_folder_path = f"{globals.base_dir}/temp/"
     os.makedirs(temp_folder_path,exist_ok=True)
-
-    debug.clean_output_folder()
 
     log("===== JOB BOT SCRAPING PIPELINE STARTING =====",True)
     log(f"max_days:{days_since_job_posted}")

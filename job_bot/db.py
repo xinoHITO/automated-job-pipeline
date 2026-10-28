@@ -1,16 +1,16 @@
 
-from pydoc import text
+import os
 import sqlite3
 from datetime import date, datetime, timedelta
 import uuid
-
-from .debug import log
-from .job_model import JobModel
 import dateparser
 from colorama import Fore, Style
 
-DATABASE_NAME = "db/scraped_jobs.db"
-dedup_index: DedupIndex = None
+from .debug import log
+from .job_model import JobModel
+from . import globals
+
+DATABASE_NAME = f"{globals.base_dir}/db/scraped_jobs.db"
 
 class DedupIndex:
     def __init__(self,urls:set[str],keys:set[tuple]):
@@ -32,6 +32,8 @@ class DedupIndex:
         key = (job.title,job.company,date_obj)
         if job.date_posted is not None:
             self.keys.add(key)
+
+dedup_index: DedupIndex = None
 
 def _load_dedup_index(max_days: int):
     global dedup_index
@@ -59,6 +61,9 @@ def _load_dedup_index(max_days: int):
 
 
 def create_job_table():
+    if not os.path.exists("db"):
+        os.makedirs("db",exist_ok=True)
+    print(DATABASE_NAME)
     try:
         conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
