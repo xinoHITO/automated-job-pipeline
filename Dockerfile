@@ -19,7 +19,7 @@ ENV PYTHONPATH="/app"
 RUN mkdir -p /app/db
 
 # 6. Create a non-root user for security (Highly Recommended for Web Scraping)
-RUN useradd -m scraperuser && chown -R scraperuser:scraperuser /app && chown -R scraperuser:scraperuser /app/db
+RUN useradd -m scraperuser && chown -R scraperuser:scraperuser /app
 USER scraperuser
 
 # 7. Command to run your scraper
