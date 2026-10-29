@@ -141,5 +141,79 @@
           "position": { "x": 0, "y": 0 }
         }
       ]
+  },
+
+
+
+
+   {
+    "site_name": "https://remoteok.com",
+    "starting_url": "https://remoteok.com/remote-backend-jobs?location=Worldwide",
+    "use_playwright": true,
+    "jobs_cap": -1,
+    "layer_to_wait_for": ".jobsboard",
+    "job_item": "tr.job",
+    "job_url": "td.position a",
+    "job_title": "td.position h2",
+    "job_company": "td.company h3",
+    "job_location": "td.location",
+    "job_post_date": "td.time time",
+    "job_description": "tr:nth-child(2 of .active) .markdown",    
+    "click_each_job": true,
+    "clicks": [
+        {
+          "description": "Close premium popup",
+          "target": "#premium-popup-close",
+          "optional": true
+        }
+      ],
+    "clicks_per_job_after_parsing": [
+      {
+          "description": "Collapse job item",
+          "target": ".active",
+          "optional": true          
+      }
+    ]
+  },
+  {
+    "site_name": "https://weworkremotely.com/remote-jobs",
+    "starting_url": "https://weworkremotely.com/remote-latin-america-jobs",
+    "use_playwright": true,
+    "jobs_cap": -1,
+    "layer_to_wait_for": ".jobs-container",
+    "job_item": "section.jobs li",
+    "job_url": ".listing-link--unlocked",
+    "job_title": "h3 span",
+    "job_company": ".new-listing__company-name",
+    "job_location": ".new-listing__company-headquarters",
+    "job_post_date": ".new-listing__header__icons__date",
+    "job_description": ".lis-container__job__content__description"
+  },
+  {
+    "site_name": "https://www.python.org",
+    "starting_url": "https://www.python.org/jobs/type/back-end/",
+    "use_playwright": false,
+    "jobs_cap": -1,
+    "job_item": "ol.list-recent-jobs > li",
+    "job_url": "h2.listing-company a",
+    "job_title": "h2.listing-company a",
+    "job_company": "span.listing-company-name",
+    "job_location": "span.listing-location a",
+    "job_post_date": "span.listing-posted time",
+    "job_description": ".job-description"
+  },
+  {
+    "site_name": "https://justremote.co",
+    "starting_url": "https://justremote.co/remote-developer-jobs",
+    "use_playwright": true,
+    "jobs_cap": -1,
+    "layer_to_wait_for": "div[class*='JobItemWrapper']",
+    "job_item": "div[class*='JobItemWrapper']",
+    "job_url": "a[class*='JobMeta']",
+    "job_title": "h3[class*='JobTitle']",
+    "job_company": "div[class*='JobItemCompany']",
+    "job_location": "span[class*='JobRegion']",
+    "job_post_date": "div[class*='JobItemDate']",
+    "job_description": ".new-job-preview-details__PaddingWrapper-v2vyl4-4"
   }
 ]
