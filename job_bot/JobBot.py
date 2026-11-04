@@ -85,7 +85,7 @@ async def main(days_since_job_posted: int,
 
         await asyncio.sleep(0.1)
 
-    # Save output to project disk        
+    # Save output to project disk
     output_filename = f"{profile.get_profile_folder_path()}/job_matches.json"
     with open(output_filename, "w", encoding="utf-8") as f:
         json.dump(matched_results, f, indent=2, ensure_ascii=False)

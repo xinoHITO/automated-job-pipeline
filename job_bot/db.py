@@ -61,8 +61,8 @@ def _load_dedup_index(max_days: int):
 
 
 def create_job_table():
-    if not os.path.exists("db"):
-        os.makedirs("db",exist_ok=True)
+    if not os.path.exists(f"{globals.base_dir}/db"):
+        os.makedirs(f"{globals.base_dir}/db",exist_ok=True)
     print(DATABASE_NAME)
     try:
         conn = sqlite3.connect(DATABASE_NAME)
