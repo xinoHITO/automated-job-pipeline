@@ -23,4 +23,4 @@ RUN useradd -m scraperuser && chown -R scraperuser:scraperuser /app
 USER scraperuser
 
 # 7. Command to run your scraper
-CMD ["python", "-m", "job_bot", "scrape-and-run"]
+CMD ["python", "-m", "job_bot", "scrape-and-run","-n"]

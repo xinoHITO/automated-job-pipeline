@@ -69,8 +69,14 @@ docker run --rm --env-file .env\
     -v scraper_db:/app/db\
     playwright-scraper:latest 
 
+# On Windows:
+# docker run --env-file .env -v "$(PWD)/scraper_logs:/app/output" -v scraper_db:/app/db playwright-scraper:latest 
+
+#Same as previous line but in single-line to input in terminal
+#docker run --rm --env-file .env -v "$(pwd)"/scraper_logs:/app/output -v scraper_db:/app/db playwright-scraper:latest 
+
 #Optional copy the db volume to the project's folder if you want to inspect it
-#docker run --rm -v scraper_db:/data -v "${PWD}:/out" alpine cp /data/scraped_jobs.db /out/    
+#docker run --rm -v scraper_db:/data -v "${pwd}:/out" alpine cp /data/scraped_jobs.db /out/
 echo "🎉 Docker container built and deployed successfully!"
 
 if [ "${SLEEP_AFTER_RUN:-0}" = "1" ]; then
