@@ -119,16 +119,19 @@ def is_valid_url(url: str) -> bool:
     except ValueError:
         return False
 
-def update_notion_database_with_file(json_file):
+def update_notion_database_with_file(json_file) -> int:
+    affected_rows = 0
     # Load your local JSON file
     try:
         with open(json_file, "r", encoding="utf-8") as file:            
-            update_notion_database(file.read())
+            affected_rows = update_notion_database(file.read())
     except FileNotFoundError:
         log(f"Error: Could not find file {json_file}. Please check the file path.")
         exit()    
+    return affected_rows
 
-def update_notion_database(json_text:str):
+def update_notion_database(json_text:str)-> int :
+    affected_rows:int = 0
     log(f"\n ---NOTION UPLOAD START--- ")
     try:
         entries = json.loads(json_text)
@@ -139,10 +142,9 @@ def update_notion_database(json_text:str):
         log(f"Found {len(entries)} entries to upload. Starting process...")
     else:
         log(f"Found 0 entries to upload. Ending process")
-
+    
     # 3. Iterate and upload each entry
-    for index, item in enumerate(entries, start=1):
-        
+    for index, item in enumerate(entries, start=1):        
         try:
             job_title = item.get("job_title", "Untitled job")
             if not job_title:
@@ -246,6 +248,7 @@ def update_notion_database(json_text:str):
                 properties=notion_properties,
                 children=page_content if page_content else None # Injects content into the page body
             )
+            affected_rows += 1
             log(f"[{index}/{len(entries)}] Successfully added: {Fore.GREEN}{job_title}{Style.RESET_ALL}")
                 
             # Rate limit safety buffer (Notion limits requests to roughly 3 per second)
@@ -258,6 +261,7 @@ def update_notion_database(json_text:str):
         
 
     log(f" ---NOTION UPLOAD FINISHED--- ")
+    return affected_rows
 
 if __name__ =="__main__":
     update_notion_database_with_file(f"{globals.base_dir}/temp/entries.json")
