@@ -1,10 +1,12 @@
 import os
+from pathlib import Path
 from colorama import Fore, Style
 import requests
 from datetime import datetime
 import shutil
 from contextlib import ExitStack
 from dotenv import load_dotenv
+from typing import Any
 
 from . import globals
 from .debug import log
@@ -56,7 +58,7 @@ def send_profile_run_notification(hiring_profile:HiringProfileModel, exported_jo
 
    
 
-def send_scrape_notification(exported_jobs:int = 0):
+def send_scrape_notification(file_paths:list[str], exported_jobs:int = 0):
     DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
     if DISCORD_WEBHOOK_URL is None:
         return
@@ -82,11 +84,13 @@ def send_scrape_notification(exported_jobs:int = 0):
             data = {
                 "content": message_content
             }
+            
             # Open the zip file and send it via multipart form request
             with open(archive_path, "rb") as f:
-                files = {
-                    "file": ("job_bot.log", open(f"{globals.base_dir}/output/job_bot.log","rb"))
-                }
+                files: dict[str, Any] = {}
+                for idx,file_path in enumerate(file_paths):
+                    file_name = Path(file_path).name
+                    files[f"file[{idx}]"] = (file_name, open(file_path,"rb"))
                 response = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files)
                 if response.status_code in (200, 204):
                     log("Webhook and file sent successfully!")

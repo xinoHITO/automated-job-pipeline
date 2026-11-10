@@ -121,4 +121,7 @@ async def scrape(days_since_job_posted:int, send_notification:bool = False):
     log(f"\n===== SCRAPE COMPLETE =====\n Scraped {Fore.GREEN}{len(all_found_jobs_dict)}{Style.RESET_ALL} jobs to '{globals.SCRAPED_JOBS_PATH}'")
 
     if send_notification:
-        notification.send_scrape_notification(len(all_found_jobs))
+        file_paths = []
+        file_paths.append(f"{globals.base_dir}/output/job_bot.log")
+        file_paths.append(globals.SCRAPED_JOBS_PATH)
+        notification.send_scrape_notification(file_paths, len(all_found_jobs))

@@ -28,7 +28,7 @@ from .import db
 
 def load_scraping_rules():
     try:
-        webscraping_config_path = f"{globals.base_dir}/{globals.DEFAULT_WEB_SCRAPING_CONFIG_PATH}"
+        webscraping_config_path = f"{globals.base_dir}/{globals.WEB_SCRAPING_CONFIG_PATH}"
         with open(webscraping_config_path, "r", encoding="utf-8") as f:
             json_text = f.read()
             return WebScrapingRules.model_validate_json(json_text)                                      
